@@ -1,0 +1,80 @@
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+! ~~~~ Model id
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+
+ID :				1	
+LOAD_MODEL :			model_dataPhys/dummy.h5
+
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+! ~~~~ Training params
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+
+EPOCHS :			600
+INNER_EPOCHS :                  2
+EPOCHS_LBFGS :			10000
+EPOCHS_START_LBFGS :            50
+LBFGS :				True
+SGD :				True
+alpha : 			100.0 100.0 0.0 0.0
+DYNAMIC_ATTENTION_WEIGHTS :	True
+START_WEIGHT_TRAINING_EPOCH :   310
+USE_LOSS_THRESHOLD :		True
+LOSS_THRESHOLD :		4.0
+
+LEARNING_RATE_WEIGHTS :         1e-2
+LEARNING_RATE_WEIGHTS_FINAL :   1e-3
+LEARNING_RATE_MODEL :		1e-4
+LEARNING_RATE_MODEL_FINAL :	1e-5
+LEARNING_RATE_LBFGS :		1
+
+BATCH_SIZE_INT :		128
+BATCH_SIZE_BOUND :		64
+MAX_BATCH_SIZE_DATA :		600
+BATCH_SIZE_REG :		0
+BATCH_SIZE_STRUCT :		0
+N_BATCH : 			40
+N_BATCH_LBFGS : 		1
+
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+! ~~~~ Solution encoding
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+
+HARD_IC_TIMESCALE :		1
+RATIO_FIRST_TIME :		1
+RATIO_T_MIN :			0
+
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+! ~~~~ Regularization
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+
+EXP_LIMITER : 			10.0
+LINEARIZE_J : 			True
+
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+! ~~~~ Collocation
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+
+COLLOCATION_MODE : 		fixed
+GRADUAL_TIME : 			True
+
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+! ~~~~ Architecture
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+
+ACTIVATION : 			tanh
+MERGED : 			True
+NEURONS_NUM : 			20
+LAYERS_T_NUM : 			4
+LAYERS_TR_NUM : 		2
+LAYERS_T_VAR_NUM : 		2
+LAYERS_TR_VAR_NUM : 		2
+LAYERS_SPLIT_NUM : 		7
+NUM_RES_BLOCKS :                0
+NUM_RES_BLOCK_LAYERS :          1
+NUM_RES_BLOCK_UNITS :           20
+
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+! ~~~~ Reproducibility
+! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
+
+seed :                          42

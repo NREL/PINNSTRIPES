@@ -1,0 +1,35 @@
+name: PINNSTRIPES-CI
+
+on:
+   push:
+     branches: [main, master]
+   pull_request:
+     branches: [main, master]
+
+jobs:
+  PINN:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.8]
+    defaults:
+      run:
+        working-directory: ${{github.workspace}}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{matrix.python-version}}
+      - name: Install Black
+        run: pip install black
+      - name: Install isort
+        run: pip install isort
+      - name: Formatting with black
+        run: |
+          black --check --line-length 79 --target-version 'py38' --include  '\.pyi?$' pinn_spm_param
+          black --check --line-length 79 --target-version 'py38' --include  '\.pyi?$' BayesianCalibration_spm
+      - name: Sort imports with isort
+        run: |
+          isort --check-only --diff --profile 'black' --multi-line 3 --trailing-comma --force-grid-wrap 0 --line-length 79 --use-parentheses pinn_spm_param
+          isort --check-only --diff --profile 'black' --multi-line 3 --trailing-comma --force-grid-wrap 0 --line-length 79 --use-parentheses BayesianCalibration_spm
