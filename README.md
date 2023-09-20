@@ -1,4 +1,4 @@
-# PINNSTRIPES (Physics-Informed Neural Network SurrogaTe for Rapidly Identifying Parameters in Energy Systems) [![PINNSTRIPES-CI](https://github.com/NREL/PINNSTRIPES/actions/workflows/ci.yml/badge.svg)](https://github.com/NREL/PINNSTRIPES/actions/workflows/ci.yml) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+# PINNSTRIPES (Physics-Informed Neural Network SurrogaTe for Rapidly Identifying Parameters in Energy Systems) [![PINNSTRIPES-CI](https://github.com/NREL/PINNSTRIPES/actions/workflows/ci.yml/badge.svg)](https://github.com/NREL/PINNSTRIPES/actions/workflows/ci.yml) 
 
 ## Installing
 
@@ -118,10 +118,29 @@ Two architectures are available. Either a split architecture is used where each 
 Lastly, gradient pathology blocks, residual blocks, or fully connected blocks can be used.
 
 
-
 ### Hierarchy
 
 The models can be used in hierarchical modes by setting `HNN` and `HNNTIME`. Examples are available in `pinn_spm_param/tests`. The hierarchy can be done by training models over the same spatio-temporal and parametric domain. It can be done by training lower hierarchy levels up until a threshold time. It can be done by training the lower hierarchy levels for a specific parameter set.
+
+## SPM Preprocess
+
+Under `pinn_spm_param/integration_spm` an implicit and an explicit integrator are provided to generate solutions of the SPM equations. 
+
+Under `pinn_spm_param/integration_spm`, run `python main.py -nosimp -opt -lean` to generate a rapid example of the SPM solution.
+
+Under `pinn_spm_param/preProcess`, run `python makeDataset_spm.py -nosimp -df ../integration_spm -frt 1` to generate a dataset usable by the PINN.
+
+The implicit integration is recommended for fine spatial discretization due to the diffusive CFL constraint. For rapid integration using a coarse grid, the explicit integration will be preferable. The explicit integrator automatically adjusts the timestep based on the CFL constraint.
+
+## SPM post process
+
+Under `pinn_spm_param/postProcess` see `exec.sh` for all the post-processing tools available.
+
+- `plotData.py` will plot the data generated from the PDE integrator
+- `plotCorrelationPINNvsData.py` will show 45 degree plots to check the accuracy of the PINN againsts the PDE integrator
+- `plotPINNResult.py` will plot the fields predicted by the best PINN
+- `plotPINNResult_movie.py` will plot the field predicted by the best PINN and the correlation plots as movies to check the evolution of the predictions over epochs.
+- `plotResidualVariation.py` will display the different losses to ensure that they are properly balanced.
 
 
 ## Bayesian calibration
@@ -134,13 +153,11 @@ The calibration can be done via `cal_nosigma.py` (see `BayesianCalibration_spm/e
 
 The likelihood uncertainty `sigma` is set via bisectional hyperparameter search.
 
-## Formatting
+## Formatting [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Code formatting and import sorting are done automatically with `black` and `isort`.
+Code formatting and import sorting are done automatically with `black` and `isort`. 
 
 Fix imports and format : `bash fixFormat.sh`
-
-Pushes and PR to the `main` branch are forbidden without first running these commands
 
 ## References
 
