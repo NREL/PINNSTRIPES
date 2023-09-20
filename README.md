@@ -63,7 +63,7 @@ The user may activate or deactivate each loss via the `alpha` parameter in `main
 
 The 4 PINN losses can be independently weighted via `alpha : 1.0 1.0 0.0 0.0`. In order, these coefficients weight the interior loss, the boundary loss, the data loss and the regularization loss.
 
-Individual physics loss can be weighted via `w_phie_int` 
+Individual physics loss can be weighted via `w_phie_int` and others `w_xxx_xxx`
 
 ### Learning rate
 
@@ -95,9 +95,9 @@ Random collocation is incompatible with self-attention weights.
 
 ### PINN training regularization
 
-We can ask the PINN to gradually increase the time spanned by the collocation points via `GRADUAL_TIME`. If the user used `fixed` collocation mode, then the collocation points location are gradually stretched over time only. The stretching schedule is controlled by `RATIO_FIRST_TIME :		1`. The stretching is done so that it reaches maximal time at the mid point in the SGD Epoch.
+We can ask the PINN to gradually increase the time spanned by the collocation points via `GRADUAL_TIME`. If the user used `fixed` collocation mode, then the collocation points location are gradually stretched over time only. The stretching schedule is controlled by `RATIO_FIRST_TIME : 1`. The stretching is done so that it reaches maximal time at the mid point in the SGD Epoch.
 
-Likewise, the time interval can gradually increase during the LBFGS training. If the user sets a warmstart epoch number for LBFGS, the warm start is redone everytime the time interval increases. The time interval stretching is controlled via `N_GRADUAL_STEPS_LBFGS : 	10` and `GRADUAL_TIME_MODE_LBFGS :	exponential`. The time mode can be linear or exponential.
+Likewise, the time interval can gradually increase during the LBFGS training. If the user sets a warmstart epoch number for LBFGS, the warm start is redone everytime the time interval increases. The time interval stretching is controlled via `N_GRADUAL_STEPS_LBFGS : 10` and `GRADUAL_TIME_MODE_LBFGS: exponential`. The time mode can be linear or exponential.
 
 We can use self-attention weights with the flag `DYNAMIC_ATTENTION_WEIGHTS`. Each collocation point and data points are then assigned a weight that is trained at each step of the SGD process. The user can decide when to start weight training by adjusting `START_WEIGHT_TRAINING_EPOCH`. 
 
