@@ -63,3 +63,12 @@ jobs:
         run: |
           cd pinn_spm_param/tests
           python test_spm_postProc.py -m pytest
+      - name: Test SPM utils
+        run: |
+          cd pinn_spm_param/tests
+          python test_spm_utils.py -m pytest
+      - name: Test SPM Bayesian calibration
+        run: |
+          cp pinn_spm_param/integration_spm/solution.npz  pinn_spm_param/integration_spm/solution_0.5_1.npz
+          cd BayesianCalibration_spm
+          bash exec_test.sh
