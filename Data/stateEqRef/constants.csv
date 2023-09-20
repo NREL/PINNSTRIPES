@@ -1,0 +1,19 @@
+﻿Variable,Value,Unit,Description
+an.alpha_a,0.5,-,Anode anodic transfer coefficient
+an.alpha_c,0.5,-,Anode cathodic transfer coefficient
+an.D_factor,1,-,Anode diffusion coefficient factor
+an.D_s0,3.00E-14,m^2/s,Anode diffusion coefficient nominal value
+an.i0_factor,2.5,A/m^2,Anode exchange current density factor
+an.Li_max,30.53,kmol/m^3,Anode maximum lithium concentration
+bat.T_0,303.15,K,Battery initial temperature
+ca.alpha_a,0.5,-,Cathode anodic transfer coefficient
+ca.alpha_c,0.5,-,Cathode cathodic transfer coefficient
+ca.D_factor_delithiate,1.5,m^2/s,Cathode diffusion coefficient factor during delithiation
+ca.D_factor_lithiate,1.5,m^2/s,Cathode diffusion coefficient factor during lithiation
+ca.i0_factor_delithiate,3,A/m^2,Cathode exchange current density factor (delithation)
+ca.i0_factor_lithiate,3,A/m^2,Cathode exchange current density factor (lithation)
+cl,1.2,kmol/m^3,Electrolyte initial salt concentration
+F_const,96485332.1,s*A/kmol,Faraday constant
+R_const,8314,J/kmol/K,Universal gas constant
+T_const,298.15,K,Temperature (if constant)
+T_ref,303.15,K,Reference temperature
