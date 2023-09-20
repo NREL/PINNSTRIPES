@@ -1,4 +1,4 @@
-name: PINN-CI
+name: PINNSTRIPES-CI
 
 on:
    push:
