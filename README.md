@@ -18,7 +18,7 @@ Located in `pinn_spm_param`
 
 3. `pinn_spm_param/postProcess`: post-process the PINN training result. Link the correct model and log folder in `exec.sh` and do `bash exec.sh`
 
-Consider looking at the test suite in `pinn_spm_param/tests` and `.github/workflows/ci.yml` to understand how to use the code
+Consider looking at the test suite in `pinn_spm_param/tests`, `BayesianCalibration_spm/exec_test.sh`, and `.github/workflows/ci.yml` to understand how to use the code
 
 ### Precision
 
