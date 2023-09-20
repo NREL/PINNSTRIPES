@@ -3,13 +3,15 @@ modelFolder=../ModelFin_1
 logFolder=../LogFin_1
 
 # Plot correlation
-python plotData.py -v -mf $modelFolder -df $dataFolder
+python plotData.py -nosimp -df $dataFolder -p 0.5 1
 
 # Plot correlation
-python plotCorrelationPINNvsData.py -v -mf $modelFolder -df $dataFolder
+python plotCorrelationPINNvsData.py -v -nosimp -mf $modelFolder -df $dataFolder -p 0.5 1
 
 # Plot contour of PINN prediction
-python plotPINNResult.py -v -mf $modelFolder -p 2 2
+python plotPINNResult.py -v -nosimp -mf $modelFolder -p 0.5 1
+
+python plotPINNResult_movie.py -nosimp -mf $modelFolder -df $dataFolder -p 0.5 1
 
 # Plot residuals
-python plotResidualVariation.py -v -lf $logFolder -mf $modelFolder
+python plotResidualVariation.py -lf $logFolder -mf $modelFolder

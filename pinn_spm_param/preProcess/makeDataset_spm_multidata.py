@@ -10,7 +10,11 @@ import argument
 
 # Read command line arguments
 args = argument.initArg()
-from spm_simpler import *
+
+if args.simpleModel:
+    from spm_simpler import *
+else:
+    from spm import *
 
 params = makeParams()
 
@@ -59,7 +63,6 @@ multi_data = [
 for idata, (data, deg_i0_a, deg_ds_c) in enumerate(
     zip(multi_data, multi_deg_i0_a, multi_deg_ds_c)
 ):
-
     if dynamicFreqT:
         n_t = data["t"].shape[0]
         freqT = n_t // target_nt

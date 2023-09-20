@@ -1,6 +1,7 @@
 # pulled from https://github.com/yaroslavvb/stuff/blob/master/eager_lbfgs/eager_lbfgs.py
 
 import os
+import sys
 import time
 
 import numpy as np
@@ -18,6 +19,19 @@ def verbose_func(s):
 
 final_loss = None
 times = []
+
+
+def safe_save(model, weight_path, overwrite=False):
+    saved = False
+    ntry = 0
+    while not saved:
+        try:
+            model.save_weights(weight_path, overwrite=overwrite)
+            saved = True
+        except BlockingIOError:
+            ntry += 1
+        if ntry > 10000:
+            sys.exit(f"ERROR: could not save {weight_path}")
 
 
 def logLosses(
@@ -74,7 +88,8 @@ def lbfgs(
     do_verbose=True,
     dynamicAttention=False,
     logLossFolder="Log",
-    nEpochStart=0,
+    nEpochDoneLBFGS=0,
+    nEpochDoneSGD=0,
     nBatchSGD=0,
     nEpochs_start_lbfgs=0,
 ):
@@ -85,7 +100,7 @@ def lbfgs(
     maxEval = maxIter * 1.25
     tolFun = 1e-5
     tolX = 1e-15
-    nCorrection = 50
+    nCorrection = max(nEpochs_start_lbfgs, 50)
     isverbose = False
     target_lr = learningRate
 
@@ -132,7 +147,7 @@ def lbfgs(
     tmp1 = tf.abs(g)
     if tf.reduce_sum(tmp1) <= tolFun:
         verbose("optimality condition below tolFun")
-        return x, f_hist
+        return x, f_hist, currentFuncEval, bestLoss
 
     # optimize for a max of maxIter iterations
     nIter = 0
@@ -267,7 +282,7 @@ def lbfgs(
         # Check if failure of iteration
 
         if nIter > nEpochs_start_lbfgs:
-            if f.numpy() > f_hist[-1] or np.isnan(f.numpy()):
+            if f.numpy() > f_hist[-1] * 2 or np.isnan(f.numpy()):
                 counter_failure += 1
                 counter_success = 0
                 f = f_old
@@ -331,13 +346,31 @@ def lbfgs(
             # step size below tolX
             print("step size below tolX")
             break
+        if learningRate < 1e-15:
+            # step size below tolX
+            print("training appears stuck")
+            break
+
+        # if tf.abs(f, f_old) < tolX:
+        #     # function value changing less than tolX
+        #     print(
+        #         "function value changing less than tolX"
+        #         + str(tf.abs(f - f_old))
+        #     )
+        #     break
 
         if do_verbose:
             # Log the loss
             logFile = open(os.path.join(logLossFolder, "log.csv"), "a+")
             if dynamicAttention:
                 logFile.write(
-                    str(int(nEpochStart + nIter))
+                    str(int(nEpochDoneLBFGS + nEpochDoneSGD + nIter))
+                    + ";"
+                    + str(
+                        int(
+                            nEpochDoneLBFGS + nEpochDoneSGD * nBatchSGD + nIter
+                        )
+                    )
                     + ";"
                     + str(f.numpy())
                     + ";"
@@ -346,12 +379,21 @@ def lbfgs(
                 )
             else:
                 logFile.write(
-                    str(int(nEpochStart + nIter)) + ";" + str(f.numpy()) + "\n"
+                    str(int(nEpochDoneLBFGS + nEpochDoneSGD + nIter))
+                    + ";"
+                    + str(
+                        int(
+                            nEpochDoneLBFGS + nEpochDoneSGD * nBatchSGD + nIter
+                        )
+                    )
+                    + ";"
+                    + str(f.numpy())
+                    + "\n"
                 )
             logFile.close()
             logLosses(
                 logLossFolder,
-                nEpochStart * nBatchSGD + nBatchSGD * int(nIter),
+                (nEpochDoneSGD * nBatchSGD) + nEpochDoneLBFGS + int(nIter),
                 intL,
                 boundL,
                 dataL,
@@ -362,13 +404,25 @@ def lbfgs(
             currentLoss = f.numpy()
             if bestLoss is None or currentLoss < bestLoss:
                 bestLoss = currentLoss
-                model.save_weights(
-                    os.path.join(modelFolder, "best.h5"), overwrite=True
+                safe_save(
+                    model, os.path.join(modelFolder, "best.h5"), overwrite=True
                 )
             if nIter % 10 == 0:
-                model.save_weights(
-                    os.path.join(modelFolder, "lastLBFGS.h5"), overwrite=True
+                safe_save(
+                    model,
+                    os.path.join(modelFolder, "lastLBFGS.h5"),
+                    overwrite=True,
                 )
+            if (
+                nIter + nEpochDoneLBFGS + nEpochDoneSGD * nBatchSGD
+            ) % 1000 == 0:
+                totalStep = nIter + nEpochDoneLBFGS + nEpochDoneSGD * nBatchSGD
+                safe_save(
+                    model,
+                    os.path.join(modelFolder, f"step_{totalStep}.h5"),
+                    overwrite=True,
+                )
+                print("\nSaved weights")
 
             end_time = time.time()
             window_ave_time += end_time - start_time
@@ -376,25 +430,27 @@ def lbfgs(
             # output to screen
             if nIter % 1 == 0:
                 print(
-                    "Step %3d loss %6.5f lr %g iL %.2f bL %.2f dL %.2f rL %.2f t/step %.2f ms "
+                    "Step %3d loss %6.5f lr %.4g iL %.2f bL %.2f dL %.2f rL %.2f t/step %.2f ms "
                     % (
                         nIter,
                         f.numpy(),
                         learningRate,
-                        int_loss.numpy() / f.numpy(),
-                        bound_loss.numpy() / f.numpy(),
-                        data_loss.numpy() / f.numpy(),
-                        reg_loss.numpy() / f.numpy(),
+                        int_loss.numpy() / (f.numpy() + 1e-12),
+                        bound_loss.numpy() / (f.numpy() + 1e-12),
+                        data_loss.numpy() / (f.numpy() + 1e-12),
+                        reg_loss.numpy() / (f.numpy() + 1e-12),
                         1000 * (window_ave_time) / 1,
                     )
                 )
-
+                sys.stdout.flush()
                 window_ave_time = 0
 
         if nIter == maxIter - 1:
             final_loss = f.numpy()
-            model.save_weights(
-                os.path.join(modelFolder, "lastLBFGS.h5"), overwrite=True
+            safe_save(
+                model,
+                os.path.join(modelFolder, f"lastLBFGS.h5"),
+                overwrite=True,
             )
 
     # save state
@@ -406,7 +462,7 @@ def lbfgs(
     state.t = t
     state.d = d
 
-    return x, f_hist, currentFuncEval
+    return x, f_hist, currentFuncEval, bestLoss
 
 
 # dummy/Struct gives Lua-like struct object with 0 defaults

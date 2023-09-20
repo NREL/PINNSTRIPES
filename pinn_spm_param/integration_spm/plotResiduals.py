@@ -4,7 +4,14 @@ sys.path.append("../util")
 import numpy as np
 from plotsUtil import *
 from plotsUtil_batt import *
-from spm_simpler import *
+
+# Read command line arguments
+args = argument.initArg()
+
+if args.simpleModel:
+    from spm_simpler import *
+else:
+    from spm import *
 
 params = makeParams()
 

@@ -5,7 +5,6 @@ import tensorflow as tf
 
 
 def completeDataset(xDataList, x_params_dataList, yDataList):
-
     nList = [xData.shape[0] for xData in xDataList]
     maxN = max(nList)
     toFillList = [max(maxN - n, 0) for n in nList]

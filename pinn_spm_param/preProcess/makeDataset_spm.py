@@ -10,7 +10,11 @@ import argument
 
 # Read command line arguments
 args = argument.initArg()
-from spm_simpler import *
+
+if args.simpleModel:
+    from spm_simpler import *
+else:
+    from spm import *
 
 params = makeParams()
 
@@ -24,7 +28,7 @@ if input_params:
     deg_i0_a = float(args.params_list[0])
     deg_ds_c = float(args.params_list[1])
 else:
-    deg_i0_a = 1.0
+    deg_i0_a = 0.5
     deg_ds_c = 1.0
 
 

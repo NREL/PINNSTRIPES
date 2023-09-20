@@ -1,22 +1,31 @@
-declare -a fileArray=("util/spm_simpler.py"\
-                      "util/_rescale.py"\
-                      "util/_losses.py"\
-                      "util/custom_activations.py"\
-                      "util/pinn.py"\
-                      "preProcess/makeDataset_spm.py"\
-                      "preProcess/makeDataset_spm_multidata.py"\
-                      "postProcess/plotPINNResult.py"\
-                      "postProcess/plotData.py"\
-                      "postProcess/plotCorrelationPINNvsData.py"\
-                      "main.py")
+declare -a fileArrayToLeave=(\
+                     )
 
+function list_include_item {
+  local list="$1"
+  local item="$2"
+  if [[ $list =~ (^|[[:space:]])"$item"($|[[:space:]]) ]] ; then
+    # yes, list include item
+    result=0
+  else
+    result=1
+  fi
+  return $result
+}
+
+# Files to operate on
+fileArray=($(grep -rl "float64" . | grep -v "__pycache__" | grep -v "README" | grep -v "convert_to_float64" | grep -v "convert_to_float32" | grep -v "Model" | grep -v "Log" | grep -v "slurm"))
 length=${#fileArray[@]}
 
-# Iterate the string array using for loop
+# Iterate the string array
 for (( i=0; i<${length}; i++ ));
 do
     file="${fileArray[$i]}"
-    sed -i.bu 's/float64/float32/g' $file
-    rm $file.bu
+    if ! `list_include_item "$fileArrayToLeave" "${fileArray[$i]}"` ; then
+      echo $file
+      sed -i.bu 's/float64/float32/g' $file
+      rm $file.bu
+    fi
 done
+
 

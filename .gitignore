@@ -127,3 +127,18 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Data
+*.csv
+*.npz
+*.npy
+
+# Outputs
+learningRate*
+lossThreshold
+*.gif
+*.h5
+*.png
+
+# poetry
+poetry.lock

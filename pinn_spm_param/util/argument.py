@@ -3,7 +3,7 @@ import argparse
 
 def initArg():
     # CLI
-    parser = argparse.ArgumentParser(description="Train PINN")
+    parser = argparse.ArgumentParser(description="SPM PINN interface")
     parser.add_argument(
         "-i",
         "--input_file",
@@ -14,10 +14,22 @@ def initArg():
         default="input",
     )
     parser.add_argument(
+        "-ckpt",
+        "--restart_from_checkpoint",
+        action="store_true",
+        help="Restart parameter optimization from checkpoint",
+    )
+    parser.add_argument(
+        "-save-ckpt",
+        "--save-ckpt",
+        action="store_true",
+        help="Save parameter optimization checkpoint",
+    )
+    parser.add_argument(
         "-dl",
         "--data_list",
         nargs="+",
-        help="<Required> Set flag",
+        help="List of datasets",
         default=None,
         required=False,
     )
@@ -39,10 +51,25 @@ def initArg():
         default=None,
     )
     parser.add_argument(
+        "-ff",
+        "--figureFolder",
+        type=str,
+        metavar="",
+        required=False,
+        help="Folder where plots are stored",
+        default=None,
+    )
+    parser.add_argument(
         "-opt",
         "--optimized",
         action="store_true",
         help="Use tf.function for optimization",
+    )
+    parser.add_argument(
+        "-lean",
+        "--lean",
+        action="store_true",
+        help="Quick exec",
     )
     parser.add_argument(
         "-nt",
@@ -100,17 +127,17 @@ def initArg():
     )
     group1 = parser.add_mutually_exclusive_group()
     group1.add_argument(
-        "-b", "--big", action="store_true", help="big network version"
+        "-expl",
+        "--explicit",
+        action="store_true",
+        help="Explicit SPM integration",
     )
     group1.add_argument(
-        "-sm", "--small", action="store_true", help="small network version"
-    )
-    group2 = parser.add_mutually_exclusive_group()
-    group2.add_argument(
-        "-m", "--merged", action="store_true", help="merged network version"
-    )
-    group2.add_argument(
-        "-sp", "--split", action="store_true", help="split network version"
+        "-impl",
+        "--implicit",
+        action="store_true",
+        help="Implicit SPM integration",
+        default=True,
     )
     group3 = parser.add_mutually_exclusive_group()
     group3.add_argument(
@@ -118,6 +145,7 @@ def initArg():
         "--quiet",
         action="store_true",
         help="execute without plotting on screen",
+        default=True,
     )
     group3.add_argument(
         "-v", "--verbose", action="store_true", help="plot on screen"
@@ -154,15 +182,16 @@ def initArg():
         "-simp",
         "--simpleModel",
         action="store_true",
-        help="Use simple P2D model",
+        help="Use simple transport properties",
     )
     group4.add_argument(
-        "-fast",
-        "--fastModel",
+        "-nosimp",
+        "--nonSimpleModel",
         action="store_true",
-        help="Use simple fast P2D model",
+        help="Use realistic transport properties",
+        default=True,
     )
 
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
 
     return args

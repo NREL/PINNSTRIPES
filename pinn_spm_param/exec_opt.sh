@@ -4,4 +4,4 @@ rm -r Model*
 rm -r Log*
 
 
-python main.py -opt -df $dataFolder -i input
+python main.py -nosimp -opt -df $dataFolder -i input

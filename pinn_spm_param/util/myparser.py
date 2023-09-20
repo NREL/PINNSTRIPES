@@ -3,7 +3,6 @@ import sys
 
 
 def parseInputFile(input_filename):
-
     if not os.path.isfile(input_filename):
         print("ERROR: No input file name found, assuming it is 'input'")
         sys.exit()

@@ -1,241 +1,143 @@
+import argparse
+import os
 import sys
 
-sys.path.append("../pinn_spm_param/util")
+parser = argparse.ArgumentParser(description="Make data for bayes cal")
+parser.add_argument(
+    "-uf",
+    "--utilFolder",
+    type=str,
+    metavar="",
+    required=True,
+    help="util folder of model",
+    default=None,
+)
+parser.add_argument(
+    "-n_t",
+    "--n_t",
+    type=int,
+    metavar="",
+    required=False,
+    help="number of measurements",
+    default=100,
+)
+parser.add_argument(
+    "-noise",
+    "--noise",
+    type=float,
+    metavar="",
+    required=False,
+    help="noise level",
+    default=0,
+)
+
+args, unknown = parser.parse_known_args()
+
+sys.path.append(args.utilFolder)
+
 import argument
 import numpy as np
+
+# from forwardPass import from_param_list_to_dict, from_param_list_to_str
+from forwardPass import from_param_list_to_str
 from plotsUtil import *
 from plotsUtil_batt import *
-from spm_simpler import *
 
 # Read command line arguments
-args = argument.initArg()
+args_spm = argument.initArg()
 
-if not args.verbose:
+if args_spm.simpleModel:
+    from spm_simpler import *
+else:
+    from spm import *
+
+if not args_spm.verbose:
     import matplotlib
 
     matplotlib.use("Agg")
 
 params = makeParams()
 
-input_params = False
-if not args.params_list is None:
+
+if not args_spm.params_list is None:
     input_params = True
-if input_params:
-    deg_i0_a = float(args.params_list[0])
-    deg_ds_c = float(args.params_list[1])
+    params_list = [float(entry) for entry in args_spm.params_list]
 else:
-    deg_i0_a = 1.0
-    deg_ds_c = 1.0
+    sys.exit("ERROR: param list is mandatory here")
 
-# discretization
-n_r = 32
-r_a = np.linspace(0, params["Rs_a"], n_r)
-dR_a = params["Rs_a"] / (n_r - 1)
-r_c = np.linspace(0, params["Rs_c"], n_r)
-dR_c = params["Rs_c"] / (n_r - 1)
-
-mindR = min(dR_a, dR_c)
-Ds_ave = 0.5 * (params["D_s_a"](params["T"], params["R"])) + 0.5 * (
-    params["D_s_c"](
-        params["cs_c0"], params["T"], params["R"], params["cscamax"], deg_ds_c
-    )
-)
-
-dt = mindR**2 / (2 * Ds_ave)
-n_t = int(2 * params["tmax"] // dt)
-
-t = np.linspace(0, params["tmax"], n_t)
-dt = params["tmax"] / (n_t - 1)
-phie = np.zeros(n_t)
-phis_c = np.zeros(n_t)
-cs_a = np.zeros((n_t, n_r))
-cs_c = np.zeros((n_t, n_r))
-Ds_a = np.zeros(n_r)
-Ds_c = np.zeros(n_r)
-rhs_a = np.zeros(n_r)
-rhs_c = np.zeros(n_r)
-
-# initialize
-ce = params["ce0"]
-phis_a = 0
-cs_a[0, :] = params["cs_a0"]
-cs_c[0, :] = params["cs_c0"]
-j_a = params["j_a"]
-j_c = params["j_c"]
-Uocp_a = params["Uocp_a"](params["cs_a0"], params["csanmax"])
-i0_a = params["i0_a"](
-    params["cs_a0"],
-    ce,
-    params["T"],
-    params["alpha_a"],
-    params["csanmax"],
-    params["R"],
-    deg_i0_a,
-)
-phie[0] = params["phie0"](
-    i0_a,
-    j_a,
-    params["F"],
-    params["R"],
-    params["T"],
-    Uocp_a,
-)
-Uocp_c = params["Uocp_c"](params["cs_c0"], params["cscamax"])
-i0_c = params["i0_c"](
-    params["cs_c0"],
-    params["ce0"],
-    params["T"],
-    params["alpha_c"],
-    params["cscamax"],
-    params["R"],
-)
-phis_c[0] = params["phis_c0"](
-    i0_a,
-    j_a,
-    params["F"],
-    params["R"],
-    params["T"],
-    Uocp_a,
-    j_c,
-    i0_c,
-    Uocp_c,
-)
+# deg_dict = from_param_list_to_dict(params_list, params)
+deg_dict = {"i0_a": params_list[0], "ds_c": params_list[1]}
+print("INFO: DEG PARAM = ", deg_dict)
 
 
-LINEARIZE_J = True
+dataFolder = args_spm.dataFolder
 
 
-for i_t in range(1, n_t):
-    # for i_t in range(1,2):
-    # GET PHIE: -I/A = ja = (i0/F) * sinh ( (F/RT) (-phie - Uocp_a))
-    cse_a = cs_a[i_t - 1, -1]
-    i0_a = params["i0_a"](
-        cse_a,
-        ce,
-        params["T"],
-        params["alpha_a"],
-        params["csanmax"],
-        params["R"],
-        deg_i0_a,
-    )
-    Uocp_a = params["Uocp_a"](cse_a, params["csanmax"])
-    if not LINEARIZE_J:
-        phie[i_t] = (
-            -(params["R"] * params["T"] / params["F"])
-            * np.arcsinh(j_a * params["F"] / i0_a)
-            - Uocp_a
-        )
+def hypercube_combinations(val_list):
+    if val_list:
+        for el in val_list[0]:
+            for combination in hypercube_combinations(val_list[1:]):
+                yield [el] + combination
     else:
-        phie[i_t] = (
-            -j_a
-            * (params["F"] / i0_a)
-            * (params["R"] * params["T"] / params["F"])
-            - Uocp_a
-        )
+        yield []
 
-    # GET PHIS_c: I/A = jc = (i0/F) * sinh ( (F/RT) (phis_c -phie - Uocp_c))
-    cse_c = cs_c[i_t - 1, -1]
-    i0_c = params["i0_c"](
-        cse_c,
-        ce,
-        params["T"],
-        params["alpha_c"],
-        params["cscamax"],
-        params["R"],
-    )
-    Uocp_c = params["Uocp_c"](cse_c, params["cscamax"])
-    if not LINEARIZE_J:
-        phis_c[i_t] = (
-            (params["R"] * params["T"] / params["F"])
-            * np.arcsinh(j_c * params["F"] / i0_c)
-            + Uocp_c
-            + phie[i_t]
-        )
-    else:
-        phis_c[i_t] = (
-            j_c
-            * (params["F"] / i0_c)
-            * (params["R"] * params["T"] / params["F"])
-            + Uocp_c
-            + phie[i_t]
-        )
 
-    # GET cs_a
-    Ds_a[:] = params["D_s_a"](params["T"], params["R"])
-    ddr_csa = np.gradient(cs_a[i_t - 1, :], r_a, axis=0, edge_order=2)
-    ddr_csa[0] = 0
-    ddr_csa[-1] = -j_a / Ds_a[-1]
-    ddr2_csa = np.zeros(n_r)
-    ddr2_csa[1 : n_r - 1] = (
-        cs_a[i_t - 1, : n_r - 2]
-        - 2 * cs_a[i_t - 1, 1 : n_r - 1]
-        + cs_a[i_t - 1, 2:n_r]
-    ) / dR_a**2
-    ddr2_csa[0] = (
-        cs_a[i_t - 1, 0] - 2 * cs_a[i_t - 1, 0] + cs_a[i_t - 1, 1]
-    ) / dR_a**2
-    ddr2_csa[-1] = (
-        cs_a[i_t - 1, -2]
-        - 2 * cs_a[i_t - 1, -1]
-        + cs_a[i_t - 1, -1]
-        + ddr_csa[-1] * dR_a
-    ) / dR_a**2
-    ddr_Ds = np.gradient(Ds_a, r_a, axis=0, edge_order=2)
-    rhs_a[1:] = (
-        Ds_a[1:] * ddr2_csa[1:]
-        + ddr_Ds[1:] * ddr_csa[1:]
-        + 2 * Ds_a[1:] * ddr_csa[1:] / r_a[1:]
-    )
-    rhs_a[0] = 3 * Ds_a[0] * ddr2_csa[0]
-    cs_a[i_t, :] = np.clip(
-        cs_a[i_t - 1, :] + dt * rhs_a, a_min=0.0, a_max=None
-    )
+verts = [[0, 1] for _ in range(2)]
+combs = hypercube_combinations(verts)
 
-    # GET cs_c
-    Ds_c[:] = params["D_s_c"](
-        cs_c[i_t - 1, :],
-        params["T"],
-        params["R"],
-        params["cscamax"],
-        deg_ds_c * np.ones(cs_c[i_t - 1, :].shape),
-    )
-    ddr_csc = np.gradient(cs_c[i_t - 1, :], r_c, axis=0, edge_order=2)
-    ddr_csc[0] = 0
-    ddr_csc[-1] = -j_c / Ds_c[-1]
-    ddr2_csc = np.zeros(n_r)
-    ddr2_csc[1 : n_r - 1] = (
-        cs_c[i_t - 1, : n_r - 2]
-        - 2 * cs_c[i_t - 1, 1 : n_r - 1]
-        + cs_c[i_t - 1, 2:n_r]
-    ) / dR_c**2
-    ddr2_csc[0] = (
-        cs_c[i_t - 1, 0] - 2 * cs_c[i_t - 1, 0] + cs_c[i_t - 1, 1]
-    ) / dR_c**2
-    ddr2_csc[-1] = (
-        cs_c[i_t - 1, -2]
-        - 2 * cs_c[i_t - 1, -1]
-        + cs_c[i_t - 1, -1]
-        + ddr_csc[-1] * dR_c
-    ) / dR_c**2
-    ddr_Ds = np.gradient(Ds_c, r_c, axis=0, edge_order=2)
-    rhs_c[1:] = (
-        Ds_c[1:] * ddr2_csc[1:]
-        + ddr_Ds[1:] * ddr_csc[1:]
-        + 2 * Ds_c[1:] * ddr_csc[1:] / r_c[1:]
-    )
-    rhs_c[0] = 3 * Ds_c[0] * ddr2_csc[0]
-    cs_c[i_t, :] = np.clip(
-        cs_c[i_t - 1, :] + dt * rhs_c, a_min=0.0, a_max=None
-    )
+solData_list = []
+params["deg_params_names"] = ["i0_a", "ds_c"]
+
+for comb in combs:
+    par_list = []
+    for ipar, name in enumerate(params["deg_params_names"]):
+        if comb[ipar] == 0:
+            par_list.append(params["deg_" + name + "_min"])
+        elif comb[ipar] == 1:
+            par_list.append(params["deg_" + name + "_max"])
+    param_string = from_param_list_to_str(par_list)
+    solData = np.load(os.path.join(dataFolder, f"solution{param_string}.npz"))
+    solData_list.append(solData)
+
+param_string = from_param_list_to_str(params_list)
+solData_meas = np.load(os.path.join(dataFolder, f"solution{param_string}.npz"))
+
 
 nT_target = args.n_t
-t_measure = np.linspace(2, 200, nT_target)
-# t_measure = np.linspace(params['tmax']-(nT_target-1), params['tmax'], nT_target)
-# t_measure = np.linspace(2, params['tmax'], nT_target)
-data_measure = np.interp(t_measure, t, phis_c)
+t_measure = np.linspace(params["tmin"] + 10, params["tmax"], nT_target)
+data_measure = np.interp(t_measure, solData_meas["t"], solData_meas["phis_c"])
+noise = args.noise
+data_measure += np.random.normal(0, noise, nT_target)
+
+
+import matplotlib.pyplot as plt
+
+fig = plt.figure()
+for solData in solData_list:
+    plt.plot(solData["t"], solData["phis_c"], "--", color="k")
+
+plt.plot(
+    t_measure,
+    data_measure,
+    linewidth=3,
+    color="r",
+)
+prettyLabels("t [s]", r"$\phi_{s,+}$ [V]", 14)
+
+if args_spm.verbose:
+    plt.show()
+else:
+    figureFolder = "Figures"
+    os.makedirs(figureFolder, exist_ok=True)
+    plt.savefig(
+        os.path.join(figureFolder, f"measurement_{nT_target}_{noise:.2g}.png")
+    )
+    plt.close()
+
 
 np.savez(
-    "dataMeasured_%d.npz" % nT_target,
+    f"dataMeasured_{nT_target}_{noise:.2g}",
     data=data_measure.astype("float64"),
     t=t_measure.astype("float64"),
+    deg_params=np.array(params_list).astype("float64"),
 )

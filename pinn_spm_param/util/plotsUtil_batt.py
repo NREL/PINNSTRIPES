@@ -3,7 +3,6 @@ from plotsUtil import *
 
 
 def plotField_all(fieldList, fieldList2, xList, label, label2, name):
-
     x_a = xList[0]
     x_s = xList[1]
     x_c = xList[2]
@@ -98,7 +97,6 @@ def plotField_all(fieldList, fieldList2, xList, label, label2, name):
 
 
 def plotField_electrode(fieldList, fieldList2, xList, label, label2, name):
-
     x_a = xList[0]
     x_c = xList[1]
 
@@ -168,7 +166,6 @@ def plotField_electrode(fieldList, fieldList2, xList, label, label2, name):
 def plotField_single(
     field, field2, x, label, label2, name, component, nlines=10
 ):
-
     plotField2 = False
     if not field2 is None:
         plotField2 = True
@@ -216,6 +213,7 @@ def plotData(
     listXAxisName=None,
     vminList=None,
     vmaxList=None,
+    globalTitle=None,
 ):
     lim = -1
     lim_vmax_t = -1
@@ -341,6 +339,15 @@ def plotData(
                 l.set_weight("bold")
                 l.set_family("serif")
                 l.set_fontsize(12)
+
+    if not globalTitle is None:
+        fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+        plt.suptitle(
+            globalTitle,
+            fontsize=14,
+            fontweight="bold",
+            fontname="Times New Roman",
+        )
 
 
 def plotCollWeights(
@@ -483,6 +490,7 @@ def plotCollWeights(
                 l.set_fontsize(12)
 
         if not globalTitle is None:
+            fig.tight_layout(rect=[0, 0.03, 1, 0.95])
             plt.suptitle(
                 globalTitle,
                 fontsize=14,

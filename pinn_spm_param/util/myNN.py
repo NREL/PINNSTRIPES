@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import time
@@ -9,15 +10,17 @@ import numpy as np
 import tensorflow as tf
 from _losses import (
     loss_fn,
+    loss_fn_annealing,
     loss_fn_dynamicAttention_tensor,
     loss_fn_lbfgs,
+    loss_fn_lbfgs_annealing,
     loss_fn_lbfgs_SA,
 )
 from conditionalDecorator import conditional_decorator
 from custom_activations import swish_activation
 from dataTools import checkDataShape, completeDataset
 from eager_lbfgs import Struct, lbfgs
-from progressBar import printProgressBar
+from myProgressBar import printProgressBar
 from tensorflow.keras import backend as K
 from tensorflow.keras import (
     initializers,
@@ -59,21 +62,87 @@ def flexible_activation(x, activation):
         out = Activation(activation="elu")(x)
     elif activation == "selu":
         out = Activation(activation="selu")(x)
+    elif activation == "gelu":
+        out = tf.keras.activations.gelu(x, approximate=True)
+    elif activation == "large_tanh":
+        out = Activation(large_tanh_activation)(x)
+    return out
+
+
+def singleLayer(x, n_units, initializer, activation):
+    out = Dense(
+        n_units,
+        kernel_initializer=initializer,
+        bias_initializer=initializer,
+    )(x)
+    out = flexible_activation(out, activation)
+    return out
+
+
+def pre_resblock(x, pre_unit, res_unit, initializer, activation):
+    if not pre_unit == res_unit:
+        out = singleLayer(x, res_unit, initializer, activation)
+    else:
+        out = x
     return out
 
 
 def resblock(x, n_units, n_layers, initializer, activation):
     tmp_x = x
-    for ilayer in range(n_layers):
-        tmp_x = Dense(n_units, kernel_initializer=initializer)(x)
-        tmp_x = flexible_activation(tmp_x, activation)
+    for _ in range(n_layers):
+        tmp_x = singleLayer(tmp_x, n_units, initializer, activation)
     out = layers.Add()([x, tmp_x])
     out = flexible_activation(out, activation)
 
     return out
 
 
-class pinn(Model):
+def grad_path(x, n_blocks, n_units, initializer, activation):
+    U = singleLayer(x, n_units, initializer, activation)
+    V = singleLayer(x, n_units, initializer, activation)
+
+    H = singleLayer(x, n_units, initializer, activation)
+    for i_block in range(n_blocks - 1):
+        Z = singleLayer(H, n_units, initializer, activation)
+        H = (np.float64(1.0) - Z) * U + Z * V
+
+    return H
+
+
+def max_tensor_list(tensor_list):
+    maxval = np.float64(0.0)
+    for i in range(len(tensor_list)):
+        if tensor_list[i] is not None:
+            maxval = tf.math.maximum(
+                (tf.math.reduce_max(tf.math.abs(tensor_list[i]))), maxval
+            )
+    return maxval
+
+
+def mean_tensor_list(tensor_list, nTrainablePar):
+    meanval = np.float64(0.0)
+    ntot = 1e-16
+    for i in range(len(tensor_list)):
+        if tensor_list[i] is not None:
+            meanval = meanval + tf.math.reduce_sum(tf.math.abs(tensor_list[i]))
+            ntot = ntot + np.prod(tensor_list[i].shape)
+    return meanval / ntot
+
+
+def safe_save(model, weight_path, overwrite=False):
+    saved = False
+    ntry = 0
+    while not saved:
+        try:
+            model.save_weights(weight_path, overwrite=overwrite)
+            saved = True
+        except BlockingIOError:
+            ntry += 1
+        if ntry > 10000:
+            sys.exit(f"ERROR: could not save {weight_path}")
+
+
+class myNN(Model):
     def __init__(
         self,
         params,
@@ -86,6 +155,8 @@ class pinn(Model):
         n_hidden_res_blocks=0,
         n_res_block_layers=1,
         n_res_block_units=1,
+        n_grad_path_layers=None,
+        n_grad_path_units=None,
         alpha=[0, 0, 0, 0],
         batch_size_int=0,
         batch_size_bound=0,
@@ -98,13 +169,17 @@ class pinn(Model):
         hard_IC_timescale=np.float64(0.81),
         exponentialLimiter=np.float64(10.0),
         collocationMode="fixed",
-        gradualTime=False,
+        gradualTime_sgd=False,
+        gradualTime_lbfgs=False,
         firstTime=np.float64(0.1),
+        n_gradual_steps_lbfgs=None,
+        gradualTimeMode_lbfgs=None,
         tmin_int_bound=np.float64(0.1),
         nEpochs=60,
         nEpochs_lbfgs=60,
         initialLossThreshold=np.float64(100),
         dynamicAttentionWeights=False,
+        annealingWeights=False,
         useLossThreshold=True,
         activation="tanh",
         linearizeJ=False,
@@ -117,11 +192,23 @@ class pinn(Model):
         yDataList=[],
         logLossFolder=None,
         modelFolder=None,
+        local_utilFolder=None,
+        hnn_utilFolder=None,
+        hnn_modelFolder=None,
+        hnn_params=None,
+        hnntime_utilFolder=None,
+        hnntime_modelFolder=None,
+        hnntime_val=None,
+        verbose=False,
+        weights=None,
     ):
-        super(pinn, self).__init__()
+        # super(myNN, self).__init__()
+        Model.__init__(self)
+
+        self.verbose = verbose
 
         if optimized:
-            self.freq = 100
+            self.freq = n_batch * 10
         else:
             self.freq = 1
 
@@ -135,6 +222,47 @@ class pinn(Model):
             self.modelFolder = modelFolder
 
         self.params = params
+        self.local_utilFolder = local_utilFolder
+        self.hnn_utilFolder = hnn_utilFolder
+        self.hnn_modelFolder = hnn_modelFolder
+        self.hnn_params = hnn_params
+        self.use_hnn = False
+        if hnn_utilFolder is not None and hnn_modelFolder is not None:
+            self.use_hnn = True
+            self.vprint("INFO: LOADING HNN...")
+            self.vprint(f"\tHNN UTIL FOLDER: {hnn_utilFolder}")
+            self.vprint(f"\tHNN MODEL FOLDER: {hnn_modelFolder}")
+            if hnn_params is not None:
+                self.vprint(f"\tHNN PARAMS: {hnn_params}")
+
+            from load_pinn import load_model
+
+            self.hnn = load_model(
+                utilFolder=hnn_utilFolder,
+                modelFolder=hnn_modelFolder,
+                localUtilFolder=self.local_utilFolder,
+                loadDep=True,
+                checkRescale=False,
+            )
+        self.hnntime_utilFolder = hnntime_utilFolder
+        self.hnntime_modelFolder = hnntime_modelFolder
+        self.hnntime_val = hnntime_val
+        self.use_hnntime = False
+        if hnntime_utilFolder is not None and hnntime_modelFolder is not None:
+            self.use_hnntime = True
+            self.vprint("INFO: LOADING HNN-TIME...")
+            self.vprint(f"\tHNN-TIME UTIL FOLDER: {hnntime_utilFolder}")
+            self.vprint(f"\tHNN-TIME MODEL FOLDER: {hnntime_modelFolder}")
+            self.vprint(f"\tHNN-TIME VALUE: {hnntime_val}")
+            from load_pinn import load_model
+
+            self.hnntime = load_model(
+                utilFolder=hnntime_utilFolder,
+                modelFolder=hnntime_modelFolder,
+                localUtilFolder=self.local_utilFolder,
+                loadDep=True,
+                checkRescale=False,
+            )
         self.hidden_units_t = hidden_units_t
         self.hidden_units_t_r = hidden_units_t_r
         self.hidden_units_phie = hidden_units_phie
@@ -144,7 +272,13 @@ class pinn(Model):
         self.n_hidden_res_blocks = n_hidden_res_blocks
         self.n_res_block_layers = n_res_block_layers
         self.n_res_block_units = n_res_block_units
+        self.n_grad_path_layers = n_grad_path_layers
+        self.n_grad_path_units = n_grad_path_units
         self.dynamicAttentionWeights = dynamicAttentionWeights
+        self.annealingWeights = annealingWeights
+        if self.annealingWeights:
+            self.dynamicAttentionWeights = False
+        self.annealingMaxSet = False
         self.useLossThreshold = useLossThreshold
         if activation.lower() == "swish":
             self.activation = "swish"
@@ -156,6 +290,10 @@ class pinn(Model):
             self.activation = "elu"
         elif activation.lower() == "selu":
             self.activation = "selu"
+        elif activation.lower() == "gelu":
+            self.activation = "gelu"
+        elif activation.lower() == "large_tanh":
+            self.activation = "large_tanh"
         else:
             sys.exit("ABORTING: Activation %s unrecognized" % activation)
         self.tmin = np.float64(self.params["tmin"])
@@ -178,6 +316,9 @@ class pinn(Model):
         self.ind_cs_c_data = np.int32(3)
 
         self.alpha = [np.float64(alphaEntry) for alphaEntry in alpha]
+        self.alpha_unweighted = [np.float64(1.0) for alphaEntry in alpha]
+        if self.annealingWeights:
+            self.alpha = [np.float64(1.0) for alphaEntry in alpha]
         # self.phie0 = self.params["phie0"]
         self.phis_a0 = np.float64(0.0)
         # self.phis_c0 = self.params["phis_c0"]
@@ -210,7 +351,8 @@ class pinn(Model):
 
         self.linearizeJ = linearizeJ
 
-        self.gradualTime = gradualTime
+        self.gradualTime_sgd = gradualTime_sgd
+        self.gradualTime_lbfgs = gradualTime_lbfgs
 
         # Self dynamics attention weights not allowed with random col
         if self.collocationMode.lower() == "random":
@@ -218,10 +360,10 @@ class pinn(Model):
                 print(
                     "WARNING: dynamic attention weights not allowed with random collocation points"
                 )
-                print("WARNING: Disabling dynamic attention weights")
+                print("\tDisabling dynamic attention weights")
             self.dynamicAttentionWeights = False
 
-        if self.gradualTime:
+        if self.gradualTime_sgd:
             self.firstTime = np.float64(firstTime)
             self.timeIncreaseExponent = -np.log(
                 (self.firstTime - np.float64(self.params["tmin"]))
@@ -232,7 +374,7 @@ class pinn(Model):
             )
 
         self.reg = 0  # 1e-3
-        self.n_batch = n_batch
+        self.n_batch = max(n_batch, 1)
         self.initialLossThreshold = initialLossThreshold
 
         self.batch_size_int = batch_size_int
@@ -257,8 +399,8 @@ class pinn(Model):
             )
             self.batch_size_data = batch_size_data
             self.new_nData = self.n_batch * self.batch_size_data
-            print("new n data = ", self.new_nData)
-            print("batch_size_data = ", self.batch_size_data)
+            self.vprint("new n data = ", self.new_nData)
+            self.vprint("batch_size_data = ", self.batch_size_data)
         self.lbfgs = lbfgs
 
         # Collocation points
@@ -275,50 +417,50 @@ class pinn(Model):
         self.activeData = True
         self.activeReg = True
         if self.batch_size_int == 0 or abs(self.alpha[0]) < 1e-12:
-            print("INFO: INT loss is INACTIVE")
+            self.vprint("INFO: INT loss is INACTIVE")
             self.activeInt = False
             n_int = n_batch
             self.batch_size_int = 1
         else:
-            print("INFO: INT loss is ACTIVE")
+            self.vprint("INFO: INT loss is ACTIVE")
         if self.batch_size_bound == 0 or abs(self.alpha[1]) < 1e-12:
-            print("INFO: BOUND loss is INACTIVE")
+            self.vprint("INFO: BOUND loss is INACTIVE")
             self.activeBound = False
             n_bound = n_batch
             self.batch_size_bound = 1
         else:
-            print("INFO: BOUND loss is ACTIVE")
+            self.vprint("INFO: BOUND loss is ACTIVE")
         if (
             self.max_batch_size_data == 0
             or abs(self.alpha[2]) < 1e-12
             or xDataList == []
         ):
-            print("INFO: DATA loss is INACTIVE")
+            self.vprint("INFO: DATA loss is INACTIVE")
             self.activeData = False
             n_data = n_batch
             self.batch_size_data = 1
         else:
-            print("INFO: DATA loss is ACTIVE")
+            self.vprint("INFO: DATA loss is ACTIVE")
         if self.batch_size_reg == 0 or abs(self.alpha[3]) < 1e-12:
-            print("INFO: REG loss is INACTIVE")
+            self.vprint("INFO: REG loss is INACTIVE")
             self.activeReg = False
             n_reg = n_batch
             self.batch_size_reg = 1
         else:
-            print("INFO: REG loss is ACTIVE")
+            self.vprint("INFO: REG loss is ACTIVE")
 
-        self.setResidualRescaling()
+        self.setResidualRescaling(weights)
 
         # Interior loss collocation points
         self.r_a_int = tf.random.uniform(
             (n_int, 1),
-            minval=self.rmin,
+            minval=self.rmin + np.float64(1e-12),
             maxval=self.rmax_a,
             dtype=tf.dtypes.float64,
         )
         self.r_c_int = tf.random.uniform(
             (n_int, 1),
-            minval=self.rmin,
+            minval=self.rmin + np.float64(1e-12),
             maxval=self.rmax_c,
             dtype=tf.dtypes.float64,
         )
@@ -328,7 +470,7 @@ class pinn(Model):
         self.r_maxc_int = self.rmax_c * tf.ones(
             (n_int, 1), dtype=tf.dtypes.float64
         )
-        if self.gradualTime:
+        if self.gradualTime_sgd:
             self.t_int = tf.random.uniform(
                 (n_int, 1),
                 minval=tmin_int,
@@ -395,7 +537,7 @@ class pinn(Model):
             maxval=self.params["deg_ds_c_max_eff"],
             dtype=tf.dtypes.float64,
         )
-        if self.gradualTime:
+        if self.gradualTime_sgd:
             self.t_bound = tf.random.uniform(
                 (n_bound, 1),
                 minval=tmin_bound,
@@ -428,7 +570,7 @@ class pinn(Model):
         ]
 
         # Reg loss collocation points
-        if self.gradualTime:
+        if self.gradualTime_sgd:
             self.t_reg = tf.random.uniform(
                 (n_reg, 1),
                 minval=tmin_reg,
@@ -467,10 +609,25 @@ class pinn(Model):
             self.deg_ds_c_reg,
         ]
 
-        if not self.hidden_units_t is None:
+        if (
+            not self.n_grad_path_layers is None
+            and not self.n_grad_path_layers == 0
+        ):
+            self.makeGradPathModel()
+        elif not self.hidden_units_t is None:
             self.makeMergedModel()
         else:
             self.makeSplitModel()
+
+        # Log model
+        n_trainable_par = np.sum(
+            [
+                np.prod(v.get_shape().as_list())
+                for v in self.model.trainable_variables
+            ]
+        )
+        self.vprint("Num trainable param = ", n_trainable_par)
+        self.n_trainable_par = n_trainable_par
 
         if self.activeData:
             self.xDataList_full = [
@@ -513,39 +670,76 @@ class pinn(Model):
                 for _ in range(self.n_data_terms)
             ]
 
-        print("n_batch_sgd = ", self.n_batch)
-        print("n_epoch_sgd = ", self.nEpochs)
+        self.n_batch_lbfgs = max(n_batch_lbfgs, 1)
+        if self.n_batch_lbfgs > self.n_batch:
+            sys.exit("ERROR: n_batch LBFGS must be smaller or equal to SGD's")
+        if self.n_batch % self.n_batch_lbfgs > 0:
+            sys.exit("ERROR: n_batch SGD must be divisible by LBFGS's")
+        self.batch_size_int_lbfgs = int(
+            self.batch_size_int * self.n_batch / self.n_batch_lbfgs
+        )
+        self.batch_size_bound_lbfgs = int(
+            self.batch_size_bound * self.n_batch / self.n_batch_lbfgs
+        )
+        self.batch_size_data_lbfgs = int(
+            self.batch_size_data * self.n_batch / self.n_batch_lbfgs
+        )
+        self.batch_size_reg_lbfgs = int(
+            self.batch_size_reg * self.n_batch / self.n_batch_lbfgs
+        )
         if self.lbfgs:
             self.nEpochs_lbfgs = nEpochs_lbfgs
+            if self.gradualTime_lbfgs:
+                self.firstTime = np.float64(firstTime)
+                self.n_gradual_steps_lbfgs = int(n_gradual_steps_lbfgs)
+                self.nEp_per_gradual_step = self.nEpochs_lbfgs // (
+                    2 * self.n_gradual_steps_lbfgs
+                )
+                self.gradualTimeMode_lbfgs = gradualTimeMode_lbfgs
+                self.gradualTimeSchedule_lbfgs = []
+                if self.gradualTimeMode_lbfgs.lower() == "linear":
+                    for istep_lbfgs in range(self.n_gradual_steps_lbfgs):
+                        stepTime = (self.params["tmax"] - self.firstTime) / (
+                            self.n_gradual_steps_lbfgs
+                        )
+                        np.float64(istep_lbfgs) * +self.firstTime
+                        new_time_lbfgs = (
+                            np.float64(istep_lbfgs) * stepTime + self.firstTime
+                        )
+                        new_time_lbfgs = min(
+                            new_time_lbfgs, self.params["tmax"]
+                        )
+                        self.gradualTimeSchedule_lbfgs.append(new_time_lbfgs)
+
+                elif self.gradualTimeMode_lbfgs.lower() == "exponential":
+                    constantExp_lbfgs = -np.float64(1.0)
+                    timeExponent_lbfgs = np.log(
+                        self.params["tmax"]
+                        - self.firstTime
+                        - constantExp_lbfgs
+                    ) / np.float64(self.n_gradual_steps_lbfgs)
+                    for istep_lbfgs in range(self.n_gradual_steps_lbfgs):
+                        new_time_lbfgs = (
+                            constantExp_lbfgs
+                            + np.exp(timeExponent_lbfgs * istep_lbfgs)
+                            + self.firstTime
+                        )
+                        new_time_lbfgs = min(
+                            new_time_lbfgs, self.params["tmax"]
+                        )
+                        self.gradualTimeSchedule_lbfgs.append(new_time_lbfgs)
+
             self.nEpochs_start_lbfgs = nEpochs_start_lbfgs
             # Do nEpochs_start_lbfgs iterations at first to make sure the Hessian is correctly computed
             self.nEpochs_lbfgs += self.nEpochs_start_lbfgs
-            self.n_batch_lbfgs = n_batch_lbfgs
-            print("n_batch_lbfgs = ", self.n_batch_lbfgs)
-            print("n_epoch_lbfgs = ", self.nEpochs_lbfgs)
-            if self.n_batch_lbfgs > self.n_batch:
-                sys.exit(
-                    "ERROR: n_batch LBFGS must be smaller or equal to SGD's"
-                )
-            if self.n_batch % self.n_batch_lbfgs > 0:
-                sys.exit("ERROR: n_batch SGD must be divisible by LBFGS's")
-            self.batch_size_int_lbfgs = int(
-                self.batch_size_int * self.n_batch / self.n_batch_lbfgs
-            )
-            self.batch_size_bound_lbfgs = int(
-                self.batch_size_bound * self.n_batch / self.n_batch_lbfgs
-            )
-            self.batch_size_data_lbfgs = int(
-                self.batch_size_data * self.n_batch / self.n_batch_lbfgs
-            )
-            self.batch_size_reg_lbfgs = int(
-                self.batch_size_reg * self.n_batch / self.n_batch_lbfgs
-            )
             if self.nEpochs_lbfgs <= self.nEpochs_start_lbfgs:
                 self.lbfgs = False
                 print(
                     "WARNING: Will not use LBFGS based on number of epoch specified"
                 )
+            else:
+                self.vprint("n_batch_lbfgs = ", self.n_batch_lbfgs)
+                self.vprint("n_epoch_lbfgs = ", self.nEpochs_lbfgs)
             self.trueLayers = []
             self.sizes_w = []
             self.sizes_b = []
@@ -557,8 +751,6 @@ class pinn(Model):
                     self.trueLayers.append(ilayer)
                     self.sizes_w.append(len(weights_biases[0].flatten()))
                     self.sizes_b.append(len(weights_biases[1].flatten()))
-            # print("sizes w = ",self.sizes_w)
-            # print("sizes b = ",self.sizes_b)
         self.sgd = sgd
         if self.nEpochs <= 0:
             self.sgd = False
@@ -566,6 +758,10 @@ class pinn(Model):
                 "WARNING: Will not use SGD based on number of epoch specified"
             )
             self.dynamicAttentionWeights = False
+            self.annealingWeights = False
+        else:
+            self.vprint("n_batch_sgd = ", self.n_batch)
+            self.vprint("n_epoch_sgd = ", self.nEpochs)
 
         # Make model configuration
         self.config = {}
@@ -578,9 +774,12 @@ class pinn(Model):
         self.config["n_hidden_res_blocks"] = self.n_hidden_res_blocks
         self.config["n_res_block_layers"] = self.n_res_block_layers
         self.config["n_res_block_units"] = self.n_res_block_units
+        self.config["n_grad_path_layers"] = self.n_grad_path_layers
+        self.config["n_grad_path_units"] = self.n_grad_path_units
         self.config["hard_IC_timescale"] = self.hard_IC_timescale
         self.config["exponentialLimiter"] = self.exponentialLimiter
         self.config["dynamicAttentionWeights"] = self.dynamicAttentionWeights
+        self.config["annealingWeights"] = self.annealingWeights
         self.config["linearizeJ"] = self.linearizeJ
         self.config["activation"] = self.activation
         self.config["activeInt"] = self.activeInt
@@ -589,6 +788,106 @@ class pinn(Model):
         self.config["activeReg"] = self.activeReg
         self.config["params_min"] = self.params_min
         self.config["params_max"] = self.params_max
+        self.config["local_utilFolder"] = self.local_utilFolder
+        self.config["hnn_utilFolder"] = self.hnn_utilFolder
+        self.config["hnn_modelFolder"] = self.hnn_modelFolder
+        self.config["hnn_params"] = self.hnn_params
+
+        # Annealing
+        self.int_loss_terms = []
+        self.bound_loss_terms = []
+        self.data_loss_terms = []
+        self.reg_loss_terms = []
+        self.int_loss_weights = []
+        self.bound_loss_weights = []
+        self.data_loss_weights = []
+        self.reg_loss_weights = []
+
+        if self.annealingWeights:
+            self.alpha_anneal = np.float64(0.9 / self.n_batch)
+            if self.activeInt:
+                n_terms = len(self.interiorTerms_rescale)
+                for _ in range(n_terms):
+                    self.int_loss_terms.append(
+                        tf.Variable(
+                            np.float64(0.0), shape=tf.TensorShape(None)
+                        )
+                    )
+                    self.int_loss_weights.append(
+                        tf.Variable(
+                            np.float64(1.0), shape=tf.TensorShape(None)
+                        )
+                    )
+            else:
+                self.int_loss_terms = [
+                    tf.Variable(np.float64(0.0), shape=tf.TensorShape(None))
+                ]
+                self.int_loss_weights = [
+                    tf.Variable(np.float64(0.0), shape=tf.TensorShape(None))
+                ]
+
+            if self.activeBound:
+                n_terms = len(self.boundaryTerms_rescale)
+                for _ in range(n_terms):
+                    self.bound_loss_terms.append(
+                        tf.Variable(
+                            np.float64(0.0), shape=tf.TensorShape(None)
+                        )
+                    )
+                    self.bound_loss_weights.append(
+                        tf.Variable(
+                            np.float64(1.0), shape=tf.TensorShape(None)
+                        )
+                    )
+            else:
+                self.bound_loss_terms = [
+                    tf.Variable(np.float64(0.0), shape=tf.TensorShape(None))
+                ]
+                self.bound_loss_weights = [
+                    tf.Variable(np.float64(0.0), shape=tf.TensorShape(None))
+                ]
+
+            if self.activeData:
+                n_terms = len(self.dataTerms_rescale)
+                for _ in range(n_terms):
+                    self.data_loss_terms.append(
+                        tf.Variable(
+                            np.float64(0.0), shape=tf.TensorShape(None)
+                        )
+                    )
+                    self.data_loss_weights.append(
+                        tf.Variable(
+                            np.float64(1.0), shape=tf.TensorShape(None)
+                        )
+                    )
+            else:
+                self.data_loss_terms = [
+                    tf.Variable(np.float64(0.0), shape=tf.TensorShape(None))
+                ]
+                self.data_loss_weights = [
+                    tf.Variable(np.float64(0.0), shape=tf.TensorShape(None))
+                ]
+
+            if self.activeReg:
+                n_terms = len(self.regTerms_rescale)
+                for _ in range(n_terms):
+                    self.reg_loss_terms.append(
+                        tf.Variable(
+                            np.float64(0.0), shape=tf.TensorShape(None)
+                        )
+                    )
+                    self.reg_loss_weights.append(
+                        tf.Variable(
+                            np.float64(1.0), shape=tf.TensorShape(None)
+                        )
+                    )
+            else:
+                self.reg_loss_terms = [
+                    tf.Variable(np.float64(0.0), shape=tf.TensorShape(None))
+                ]
+                self.reg_loss_weights = [
+                    tf.Variable(np.float64(0.0), shape=tf.TensorShape(None))
+                ]
 
         # Dynamic attention
         self.int_col_weights = []
@@ -651,7 +950,7 @@ class pinn(Model):
                 for _ in range(self.n_batch):
                     self.data_col_weights.append([np.float64(0.0)])
             if self.activeReg:
-                n_terms = len(self.regularizationTerms_rescale)
+                n_terms = len(self.regTerms_rescale)
                 for _ in range(self.n_batch):
                     tmp = tf.Variable(
                         tf.reshape(
@@ -667,9 +966,12 @@ class pinn(Model):
                 for _ in range(self.n_batch):
                     self.reg_col_weights.append([np.float64(0.0)])
 
-    def makeSplitModel(self):
+    def vprint(self, *kwargs):
+        if self.verbose:
+            print(*kwargs)
 
-        print("INFO: MAKING SPLIT MODEL")
+    def makeSplitModel(self):
+        self.vprint("INFO: MAKING SPLIT MODEL")
 
         # inputs
         input_t = Input(shape=(1,), name="input_t")
@@ -680,13 +982,24 @@ class pinn(Model):
             [input_t, input_deg_i0_a, input_deg_ds_c], name="input_t_par"
         )
 
-        initializer = "glorot_normal"
+        if self.use_hnn:
+            initializer = "he_normal"
+        else:
+            initializer = "he_normal"
 
         # phie
         tmp_phie = input_t_par
         for unit in self.hidden_units_phie:
-            tmp_phie = Dense(unit, kernel_initializer=initializer)(tmp_phie)
-            tmp_phie = flexible_activation(tmp_phie, self.activation)
+            tmp_phie = singleLayer(
+                tmp_phie, unit, initializer, self.activation
+            )
+        tmp_phie = pre_resblock(
+            tmp_phie,
+            self.hidden_units_phie[-1],
+            self.n_res_block_units,
+            initializer,
+            self.activation,
+        )
         for i_res_block in range(self.n_hidden_res_blocks):
             tmp_phie = resblock(
                 tmp_phie,
@@ -695,15 +1008,28 @@ class pinn(Model):
                 initializer,
                 self.activation,
             )
-        output_phie = Dense(1, activation="linear", name="phie")(tmp_phie)
+        output_phie = Dense(
+            1,
+            activation="linear",
+            name="phie",
+            kernel_initializer=initializer,
+            bias_initializer=initializer,
+        )(tmp_phie)
 
         # phis_c
         tmp_phis_c = input_t_par
         for unit in self.hidden_units_phis_c:
-            tmp_phis_c = Dense(unit, kernel_initializer=initializer)(
-                tmp_phis_c
+            tmp_phis_c = singleLayer(
+                tmp_phis_c, unit, initializer, self.activation
             )
-            tmp_phis_c = flexible_activation(tmp_phis_c, self.activation)
+
+        tmp_phis_c = pre_resblock(
+            tmp_phis_c,
+            self.hidden_units_phis_c[-1],
+            self.n_res_block_units,
+            initializer,
+            self.activation,
+        )
         for i_res_block in range(self.n_hidden_res_blocks):
             tmp_phis_c = resblock(
                 tmp_phis_c,
@@ -712,15 +1038,27 @@ class pinn(Model):
                 initializer,
                 self.activation,
             )
-        output_phis_c = Dense(1, activation="linear", name="phis_c")(
-            tmp_phis_c
-        )
+        output_phis_c = Dense(
+            1,
+            activation="linear",
+            name="phis_c",
+            kernel_initializer=initializer,
+            bias_initializer=initializer,
+        )(tmp_phis_c)
 
         # cs_a
         tmp_cs_a = concatenate([input_t_par, input_r], name="input_cs_a")
         for unit in self.hidden_units_cs_a:
-            tmp_cs_a = Dense(unit, kernel_initializer=initializer)(tmp_cs_a)
-            tmp_cs_a = flexible_activation(tmp_cs_a, self.activation)
+            tmp_cs_a = singleLayer(
+                tmp_cs_a, unit, initializer, self.activation
+            )
+        tmp_cs_a = pre_resblock(
+            tmp_cs_a,
+            self.hidden_units_cs_a[-1],
+            self.n_res_block_units,
+            initializer,
+            self.activation,
+        )
         for i_res_block in range(self.n_hidden_res_blocks):
             tmp_cs_a = resblock(
                 tmp_cs_a,
@@ -729,13 +1067,27 @@ class pinn(Model):
                 initializer,
                 self.activation,
             )
-        output_cs_a = Dense(1, activation="sigmoid", name="cs_a")(tmp_cs_a)
+        output_cs_a = Dense(
+            1,
+            activation="linear",
+            name="cs_a",
+            kernel_initializer=initializer,
+            bias_constraint=max_norm(0),
+        )(tmp_cs_a)
 
         # cs_c
         tmp_cs_c = concatenate([input_t_par, input_r], name="input_cs_c")
         for unit in self.hidden_units_cs_c:
-            tmp_cs_c = Dense(unit, kernel_initializer=initializer)(tmp_cs_c)
-            tmp_cs_c = flexible_activation(tmp_cs_c, self.activation)
+            tmp_cs_c = singleLayer(
+                tmp_cs_c, unit, initializer, self.activation
+            )
+        tmp_cs_c = pre_resblock(
+            tmp_cs_c,
+            self.hidden_units_cs_c[-1],
+            self.n_res_block_units,
+            initializer,
+            self.activation,
+        )
         for i_res_block in range(self.n_hidden_res_blocks):
             tmp_cs_c = resblock(
                 tmp_cs_c,
@@ -744,7 +1096,13 @@ class pinn(Model):
                 initializer,
                 self.activation,
             )
-        output_cs_c = Dense(1, activation="sigmoid", name="cs_c")(tmp_cs_c)
+        output_cs_c = Dense(
+            1,
+            activation="linear",
+            name="cs_c",
+            kernel_initializer=initializer,
+            bias_constraint=max_norm(0),
+        )(tmp_cs_c)
 
         self.model = Model(
             [input_t, input_r, input_deg_i0_a, input_deg_ds_c],
@@ -757,7 +1115,7 @@ class pinn(Model):
         )
 
     def makeMergedModel(self):
-        print("INFO: MAKING MERGED MODEL")
+        self.vprint("INFO: MAKING MERGED MODEL")
 
         # inputs
         input_t = Input(shape=(1,), name="input_t")
@@ -768,25 +1126,38 @@ class pinn(Model):
             [input_t, input_deg_i0_a, input_deg_ds_c], name="input_t_par"
         )
 
-        initializer = "glorot_normal"
+        if self.use_hnn:
+            initializer = "he_normal"
+        else:
+            initializer = "he_normal"
 
         # t domain
         tmp_t = input_t_par
         for unit in self.hidden_units_t:
-            tmp_t = Dense(unit, kernel_initializer=initializer)(tmp_t)
-            tmp_t = flexible_activation(tmp_t, self.activation)
+            tmp_t = singleLayer(tmp_t, unit, initializer, self.activation)
 
         # t_r domain
         tmp_t_r = concatenate([tmp_t, input_r], name="input_t_r")
         for unit in self.hidden_units_t_r:
-            tmp_t_r = Dense(unit, kernel_initializer=initializer)(tmp_t_r)
-            tmp_t_r = flexible_activation(tmp_t_r, self.activation)
+            tmp_t_r = singleLayer(tmp_t_r, unit, initializer, self.activation)
 
         # phie
         tmp_phie = tmp_t
         for unit in self.hidden_units_phie:
-            tmp_phie = Dense(unit, kernel_initializer=initializer)(tmp_phie)
-            tmp_phie = flexible_activation(tmp_phie, self.activation)
+            tmp_phie = singleLayer(
+                tmp_phie, unit, initializer, self.activation
+            )
+
+        last_unit = self.hidden_units_t[-1]
+        if len(self.hidden_units_phie) > 0:
+            last_unit = self.hidden_units_phie[-1]
+        tmp_phie = pre_resblock(
+            tmp_phie,
+            last_unit,
+            self.n_res_block_units,
+            initializer,
+            self.activation,
+        )
         for i_res_block in range(self.n_hidden_res_blocks):
             tmp_phie = resblock(
                 tmp_phie,
@@ -795,16 +1166,31 @@ class pinn(Model):
                 initializer,
                 self.activation,
             )
-        output_phie = Dense(1, activation="linear", name="phie")(tmp_phie)
+        output_phie = Dense(
+            1,
+            activation="linear",
+            name="phie",
+            kernel_initializer=initializer,
+            bias_initializer=initializer,
+        )(tmp_phie)
 
         # phis_c
         tmp_phis_c = tmp_t
         for unit in self.hidden_units_phis_c:
-            tmp_phis_c = Dense(unit, kernel_initializer=initializer)(
-                tmp_phis_c
+            tmp_phis_c = singleLayer(
+                tmp_phis_c, unit, initializer, self.activation
             )
-            tmp_phis_c = flexible_activation(tmp_phis_c, self.activation)
 
+        last_unit = self.hidden_units_t[-1]
+        if len(self.hidden_units_phis_c) > 0:
+            last_unit = self.hidden_units_phis_c[-1]
+        tmp_phis_c = pre_resblock(
+            tmp_phis_c,
+            last_unit,
+            self.n_res_block_units,
+            initializer,
+            self.activation,
+        )
         for i_res_block in range(self.n_hidden_res_blocks):
             tmp_phis_c = resblock(
                 tmp_phis_c,
@@ -813,15 +1199,31 @@ class pinn(Model):
                 initializer,
                 self.activation,
             )
-        output_phis_c = Dense(1, activation="linear", name="phis_c")(
-            tmp_phis_c
-        )
+        output_phis_c = Dense(
+            1,
+            activation="linear",
+            name="phis_c",
+            kernel_initializer=initializer,
+            bias_initializer=initializer,
+        )(tmp_phis_c)
 
         # cs_a
         tmp_cs_a = tmp_t_r
         for unit in self.hidden_units_cs_a:
-            tmp_cs_a = Dense(unit, kernel_initializer=initializer)(tmp_cs_a)
-            tmp_cs_a = flexible_activation(tmp_cs_a, self.activation)
+            tmp_cs_a = singleLayer(
+                tmp_cs_a, unit, initializer, self.activation
+            )
+
+        last_unit = self.hidden_units_t_r[-1]
+        if len(self.hidden_units_cs_a) > 0:
+            last_unit = self.hidden_units_cs_a[-1]
+        tmp_cs_a = pre_resblock(
+            tmp_cs_a,
+            last_unit,
+            self.n_res_block_units,
+            initializer,
+            self.activation,
+        )
         for i_res_block in range(self.n_hidden_res_blocks):
             tmp_cs_a = resblock(
                 tmp_cs_a,
@@ -830,13 +1232,31 @@ class pinn(Model):
                 initializer,
                 self.activation,
             )
-        output_cs_a = Dense(1, activation="sigmoid", name="cs_a")(tmp_cs_a)
+        output_cs_a = Dense(
+            1,
+            activation="linear",
+            name="cs_a",
+            kernel_initializer=initializer,
+            bias_constraint=max_norm(0),
+        )(tmp_cs_a)
 
         # cs_c
         tmp_cs_c = tmp_t_r
         for unit in self.hidden_units_cs_c:
-            tmp_cs_c = Dense(unit, kernel_initializer=initializer)(tmp_cs_c)
-            tmp_cs_c = flexible_activation(tmp_cs_c, self.activation)
+            tmp_cs_c = singleLayer(
+                tmp_cs_c, unit, initializer, self.activation
+            )
+
+        last_unit = self.hidden_units_t_r[-1]
+        if len(self.hidden_units_cs_c) > 0:
+            last_unit = self.hidden_units_cs_c[-1]
+        tmp_cs_c = pre_resblock(
+            tmp_cs_c,
+            last_unit,
+            self.n_res_block_units,
+            initializer,
+            self.activation,
+        )
         for i_res_block in range(self.n_hidden_res_blocks):
             tmp_cs_c = resblock(
                 tmp_cs_c,
@@ -845,7 +1265,120 @@ class pinn(Model):
                 initializer,
                 self.activation,
             )
-        output_cs_c = Dense(1, activation="sigmoid", name="cs_c")(tmp_cs_c)
+        output_cs_c = Dense(
+            1,
+            activation="linear",
+            name="cs_c",
+            kernel_initializer=initializer,
+            bias_constraint=max_norm(0),
+        )(tmp_cs_c)
+
+        self.model = Model(
+            [input_t, input_r, input_deg_i0_a, input_deg_ds_c],
+            [
+                output_phie,
+                output_phis_c,
+                output_cs_a,
+                output_cs_c,
+            ],
+        )
+
+    def makeGradPathModel(self):
+        self.vprint("INFO: MAKING PATHOLOGY GRADIENT MODEL")
+
+        # inputs
+        input_t = Input(shape=(1,), name="input_t")
+        input_r = Input(shape=(1,), name="input_r")
+        input_deg_i0_a = Input(shape=(1,), name="input_deg_i0_a")
+        input_deg_ds_c = Input(shape=(1,), name="input_deg_ds_c")
+        input_t_par = concatenate(
+            [input_t, input_deg_i0_a, input_deg_ds_c], name="input_t_par"
+        )
+
+        if self.use_hnn:
+            initializer = "he_normal"
+        else:
+            initializer = "he_normal"
+
+        # t domain
+        tmp_t = input_t_par
+        for unit in self.hidden_units_t:
+            tmp_t = singleLayer(tmp_t, unit, initializer, self.activation)
+
+        # t_r domain
+        tmp_t_r = concatenate([tmp_t, input_r], name="input_t_r")
+        for unit in self.hidden_units_t_r:
+            tmp_t_r = singleLayer(tmp_t_r, unit, initializer, self.activation)
+
+        # phie
+        tmp_phie = tmp_t
+        tmp_phie = grad_path(
+            tmp_phie,
+            self.n_grad_path_layers,
+            self.n_grad_path_units,
+            initializer,
+            self.activation,
+        )
+        output_phie = Dense(
+            1,
+            activation="linear",
+            name="phie",
+            kernel_initializer=initializer,
+            bias_initializer=initializer,
+        )(tmp_phie)
+
+        # phis_c
+        tmp_phis_c = tmp_t
+        tmp_phis_c = grad_path(
+            tmp_phis_c,
+            self.n_grad_path_layers,
+            self.n_grad_path_units,
+            initializer,
+            self.activation,
+        )
+        output_phis_c = Dense(
+            1,
+            activation="linear",
+            name="phis_c",
+            kernel_initializer=initializer,
+            bias_initializer=initializer,
+        )(tmp_phis_c)
+
+        # cs_a
+        tmp_cs_a = tmp_t_r
+        tmp_cs_a = grad_path(
+            tmp_cs_a,
+            self.n_grad_path_layers,
+            self.n_grad_path_units,
+            initializer,
+            self.activation,
+        )
+        output_cs_a = Dense(
+            1,
+            activation="linear",
+            name="cs_a",
+            kernel_initializer=initializer,
+            bias_initializer=initializer,
+            bias_constraint=max_norm(0),
+        )(tmp_cs_a)
+
+        # cs_c
+        tmp_cs_c = tmp_t_r
+        tmp_cs_c = grad_path(
+            tmp_cs_c,
+            self.n_grad_path_layers,
+            self.n_grad_path_units,
+            initializer,
+            self.activation,
+        )
+        output_cs_c = Dense(
+            1,
+            activation="linear",
+            name="cs_c",
+            kernel_initializer=initializer,
+            bias_initializer=initializer,
+            bias_constraint=max_norm(0),
+        )(tmp_cs_c)
 
         self.model = Model(
             [input_t, input_r, input_deg_i0_a, input_deg_ds_c],
@@ -875,7 +1408,7 @@ class pinn(Model):
         reg_weights=None,
     ):
         raise NotImplementedError
-        if self.gradualTime:
+        if self.gradualTime_sgd:
             print("WARNING: Do not load col if you are in gradual time mode")
             print("WARNING: Will not load weights")
             return
@@ -1014,7 +1547,25 @@ class pinn(Model):
         w = tf.convert_to_tensor(w)
         return w
 
-    from _rescale import rescaleCs_a, rescaleCs_c, rescalePhie, rescalePhis_c
+    from _rescale import (
+        fix_param,
+        get_cs_a_hnn,
+        get_cs_a_hnntime,
+        get_cs_c_hnn,
+        get_cs_c_hnntime,
+        get_phie0,
+        get_phie_hnn,
+        get_phie_hnntime,
+        get_phis_c0,
+        get_phis_c_hnn,
+        get_phis_c_hnntime,
+        rescale_param,
+        rescaleCs_a,
+        rescaleCs_c,
+        rescalePhie,
+        rescalePhis_c,
+        unrescale_param,
+    )
 
     def stretchT(self, t, tmin, tmax, tminp, tmaxp):
         return (t - tmin) * (tmaxp - tminp) / (tmax - tmin) + tminp
@@ -1039,6 +1590,7 @@ class pinn(Model):
         x_cs_params_batch_trainList=None,
         tmax=None,
         step=None,
+        gradient_threshold=None,
     ):
         with tf.GradientTape(persistent=True) as tape:
             tape.watch(int_col_weights)
@@ -1136,6 +1688,23 @@ class pinn(Model):
         grads_data_col = tape.gradient(mloss_value, data_col_weights)
         grads_reg_col = tape.gradient(mloss_value, reg_col_weights)
 
+        if gradient_threshold is not None:
+            grads_model, glob_norm = tf.clip_by_global_norm(
+                grads_model, gradient_threshold
+            )
+            grads_int_col, _ = tf.clip_by_global_norm(
+                grads_int_col, gradient_threshold, use_norm=glob_norm
+            )
+            grads_bound_col, _ = tf.clip_by_global_norm(
+                grads_bound_col, gradient_threshold, use_norm=glob_norm
+            )
+            grads_data_col, _ = tf.clip_by_global_norm(
+                grads_data_col, gradient_threshold, use_norm=glob_norm
+            )
+            grads_reg_col, _ = tf.clip_by_global_norm(
+                grads_reg_col, gradient_threshold, use_norm=glob_norm
+            )
+
         del tape
 
         return (
@@ -1157,6 +1726,204 @@ class pinn(Model):
         )
 
     @conditional_decorator(tf.function, optimized)
+    def train_step_annealing(
+        self,
+        int_col_pts=None,
+        int_col_params=None,
+        int_loss_weights=None,
+        bound_col_pts=None,
+        bound_col_params=None,
+        bound_loss_weights=None,
+        reg_col_pts=None,
+        reg_col_params=None,
+        reg_loss_weights=None,
+        x_batch_trainList=None,
+        x_cs_batch_trainList=None,
+        x_params_batch_trainList=None,
+        y_batch_trainList=None,
+        data_loss_weights=None,
+        tmax=None,
+        gradient_threshold=None,
+    ):
+        with tf.GradientTape(persistent=True) as tape:
+            # get data loss
+            interiorTerms = self.interior_loss(
+                int_col_pts, int_col_params, tmax
+            )
+            boundaryTerms = self.boundary_loss(
+                bound_col_pts, bound_col_params, tmax
+            )
+            dataTerms = self.data_loss(
+                x_batch_trainList,
+                x_cs_batch_trainList,
+                x_params_batch_trainList,
+                y_batch_trainList,
+            )
+            regTerms = self.regularization_loss(reg_col_pts, tmax)
+            # Rescale residuals
+            interiorTerms_rescaled = [
+                interiorTerm[0] * resc
+                for (interiorTerm, resc) in zip(
+                    interiorTerms, self.interiorTerms_rescale
+                )
+            ]
+            boundaryTerms_rescaled = [
+                boundaryTerm[0] * resc
+                for (boundaryTerm, resc) in zip(
+                    boundaryTerms, self.boundaryTerms_rescale
+                )
+            ]
+            dataTerms_rescaled = [
+                dataTerm[0] * resc
+                for (dataTerm, resc) in zip(dataTerms, self.dataTerms_rescale)
+            ]
+            regTerms_rescaled = [
+                regTerm[0] * resc
+                for (regTerm, resc) in zip(regTerms, self.regTerms_rescale)
+            ]
+            (
+                loss_value,
+                int_loss,
+                bound_loss,
+                data_loss,
+                reg_loss,
+            ) = loss_fn_annealing(
+                interiorTerms_rescaled,
+                boundaryTerms_rescaled,
+                dataTerms_rescaled,
+                regTerms_rescaled,
+                self.int_loss_terms,
+                self.bound_loss_terms,
+                self.data_loss_terms,
+                self.reg_loss_terms,
+                int_loss_weights,
+                bound_loss_weights,
+                data_loss_weights,
+                reg_loss_weights,
+                alpha=self.alpha,
+            )
+        mean_grads_int = [
+            mean_tensor_list(
+                tape.gradient(
+                    self.int_loss_terms[i], self.model.trainable_weights
+                ),
+                self.n_trainable_par,
+            )
+            for i in range(len(self.interiorTerms_rescale))
+        ]
+        max_grads_int = [
+            max_tensor_list(
+                tape.gradient(
+                    self.int_loss_terms[i], self.model.trainable_weights
+                )
+            )
+            for i in range(len(self.interiorTerms_rescale))
+        ]
+        mean_grads_bound = [
+            mean_tensor_list(
+                tape.gradient(
+                    self.bound_loss_terms[i], self.model.trainable_weights
+                ),
+                self.n_trainable_par,
+            )
+            for i in range(len(self.boundaryTerms_rescale))
+        ]
+        max_grads_bound = [
+            max_tensor_list(
+                tape.gradient(
+                    self.bound_loss_terms[i], self.model.trainable_weights
+                )
+            )
+            for i in range(len(self.boundaryTerms_rescale))
+        ]
+        mean_grads_data = [
+            mean_tensor_list(
+                tape.gradient(
+                    self.data_loss_terms[i], self.model.trainable_weights
+                ),
+                self.n_trainable_par,
+            )
+            for i in range(len(self.dataTerms_rescale))
+        ]
+        max_grads_data = [
+            max_tensor_list(
+                tape.gradient(
+                    self.data_loss_terms[i], self.model.trainable_weights
+                )
+            )
+            for i in range(len(self.dataTerms_rescale))
+        ]
+        mean_grads_reg = [
+            mean_tensor_list(
+                tape.gradient(
+                    self.reg_loss_terms[i], self.model.trainable_weights
+                ),
+                self.n_trainable_par,
+            )
+            for i in range(len(self.regTerms_rescale))
+        ]
+        max_grads_reg = [
+            max_tensor_list(
+                tape.gradient(
+                    self.reg_loss_terms[i], self.model.trainable_weights
+                )
+            )
+            for i in range(len(self.regTerms_rescale))
+        ]
+
+        grads_model = tape.gradient(loss_value, self.model.trainable_weights)
+
+        if gradient_threshold is not None:
+            grads_model, glob_norm = tf.clip_by_global_norm(
+                grads_model, gradient_threshold
+            )
+            max_grads_int, _ = tf.clip_by_global_norm(
+                max_grads_int, gradient_threshold, use_norm=glob_norm
+            )
+            max_grads_bound, _ = tf.clip_by_global_norm(
+                max_grads_bound, gradient_threshold, use_norm=glob_norm
+            )
+            max_grads_data, _ = tf.clip_by_global_norm(
+                max_grads_data, gradient_threshold, use_norm=glob_norm
+            )
+            max_grads_reg, _ = tf.clip_by_global_norm(
+                max_grads_reg, gradient_threshold, use_norm=glob_norm
+            )
+            mean_grads_int, _ = tf.clip_by_global_norm(
+                mean_grads_int, gradient_threshold, use_norm=glob_norm
+            )
+            mean_grads_bound, _ = tf.clip_by_global_norm(
+                mean_grads_bound, gradient_threshold, use_norm=glob_norm
+            )
+            mean_grads_data, _ = tf.clip_by_global_norm(
+                mean_grads_data, gradient_threshold, use_norm=glob_norm
+            )
+            mean_grads_reg, _ = tf.clip_by_global_norm(
+                mean_grads_reg, gradient_threshold, use_norm=glob_norm
+            )
+
+        return (
+            loss_value,
+            int_loss / (loss_value),
+            bound_loss / (loss_value),
+            data_loss / (loss_value),
+            reg_loss / (loss_value),
+            interiorTerms_rescaled,
+            boundaryTerms_rescaled,
+            dataTerms_rescaled,
+            regTerms_rescaled,
+            grads_model,
+            max_grads_int,
+            max_grads_bound,
+            max_grads_data,
+            max_grads_reg,
+            mean_grads_int,
+            mean_grads_bound,
+            mean_grads_data,
+            mean_grads_reg,
+        )
+
+    @conditional_decorator(tf.function, optimized)
     def train_step(
         self,
         int_col_pts=None,
@@ -1170,6 +1937,7 @@ class pinn(Model):
         x_params_batch_trainList=None,
         y_batch_trainList=None,
         tmax=None,
+        gradient_threshold=None,
     ):
         with tf.GradientTape(persistent=True) as tape:
             # get data loss
@@ -1215,6 +1983,10 @@ class pinn(Model):
                 alpha=self.alpha,
             )
         grads_model = tape.gradient(loss_value, self.model.trainable_weights)
+        if gradient_threshold is not None:
+            grads_model, glob_norm = tf.clip_by_global_norm(
+                grads_model, gradient_threshold
+            )
 
         return (
             loss_value,
@@ -1271,12 +2043,121 @@ class pinn(Model):
         boundary_loss,
         data_loss,
         get_loss_and_flat_grad,
+        get_loss_and_flat_grad_annealing,
         get_loss_and_flat_grad_SA,
+        get_unweighted_loss,
         interior_loss,
         regularization_loss,
         setResidualRescaling,
     )
     from dataTools import check_loss_dim
+
+    def runLBFGS(
+        self,
+        tmax,
+        nIter,
+        epochDoneLBFGS,
+        epochDoneSGD,
+        bestLoss,
+        learningRateLBFGS,
+        gradient_threshold=None,
+    ):
+        if self.dynamicAttentionWeights and (
+            tmax is None or abs(self.params["tmax"] - tmax) < 1e-12
+        ):
+            loss_and_flat_grad = self.get_loss_and_flat_grad_SA(
+                self.int_col_pts,
+                self.int_col_params,
+                self.bound_col_pts,
+                self.bound_col_params,
+                self.reg_col_pts,
+                self.reg_col_params,
+                self.flatIntColWeights,
+                self.flatBoundColWeights,
+                self.flatDataColWeights,
+                self.flatRegColWeights,
+                [tf.convert_to_tensor(x) for x in self.xDataList_full],
+                [tf.convert_to_tensor(x) for x in self.x_params_dataList_full],
+                [tf.convert_to_tensor(y) for y in self.yDataList_full],
+                self.n_batch_lbfgs,
+                tmax=tmax,
+                gradient_threshold=gradient_threshold,
+            )
+        elif (
+            self.dynamicAttentionWeights
+            and abs(self.params["tmax"] - tmax) >= 1e-12
+        ):
+            loss_and_flat_grad = self.get_loss_and_flat_grad_SA(
+                self.int_col_pts,
+                self.int_col_params,
+                self.bound_col_pts,
+                self.bound_col_params,
+                self.reg_col_pts,
+                self.reg_col_params,
+                self.flatIntColOnes,
+                self.flatBoundColOnes,
+                self.flatDataColOnes,
+                self.flatRegColOnes,
+                [tf.convert_to_tensor(x) for x in self.xDataList_full],
+                [tf.convert_to_tensor(x) for x in self.x_params_dataList_full],
+                [tf.convert_to_tensor(y) for y in self.yDataList_full],
+                self.n_batch_lbfgs,
+                tmax=tmax,
+                gradient_threshold=gradient_threshold,
+            )
+        elif self.annealingWeights:
+            loss_and_flat_grad = self.get_loss_and_flat_grad_annealing(
+                self.int_col_pts,
+                self.int_col_params,
+                self.int_loss_weights,
+                self.bound_col_pts,
+                self.bound_col_params,
+                self.bound_loss_weights,
+                self.reg_col_pts,
+                self.reg_col_params,
+                self.reg_loss_weights,
+                [tf.convert_to_tensor(x) for x in self.xDataList_full],
+                [tf.convert_to_tensor(x) for x in self.x_params_dataList_full],
+                [tf.convert_to_tensor(y) for y in self.yDataList_full],
+                self.data_loss_weights,
+                self.n_batch_lbfgs,
+                tmax=tmax,
+                gradient_threshold=gradient_threshold,
+            )
+        else:
+            loss_and_flat_grad = self.get_loss_and_flat_grad(
+                self.int_col_pts,
+                self.int_col_params,
+                self.bound_col_pts,
+                self.bound_col_params,
+                self.reg_col_pts,
+                self.reg_col_params,
+                [tf.convert_to_tensor(x) for x in self.xDataList_full],
+                [tf.convert_to_tensor(x) for x in self.x_params_dataList_full],
+                [tf.convert_to_tensor(y) for y in self.yDataList_full],
+                self.n_batch_lbfgs,
+                tmax=tmax,
+                gradient_threshold=gradient_threshold,
+            )
+
+        _, _, _, bestLoss = lbfgs(
+            loss_and_flat_grad,
+            self.get_weights(self.model),
+            Struct(),
+            model=self.model,
+            bestLoss=bestLoss,
+            modelFolder=self.modelFolder,
+            maxIter=nIter,
+            learningRate=learningRateLBFGS,
+            dynamicAttention=self.dynamicAttentionWeights,
+            logLossFolder=self.logLossFolder,
+            nEpochDoneLBFGS=epochDoneLBFGS,
+            nEpochDoneSGD=epochDoneSGD,
+            nBatchSGD=self.n_batch,
+            nEpochs_start_lbfgs=self.nEpochs_start_lbfgs,
+        )
+
+        return bestLoss
 
     def train(
         self,
@@ -1289,8 +2170,10 @@ class pinn(Model):
         learningRateLBFGS=None,
         inner_epochs=None,
         start_weight_training_epoch=None,
+        gradient_threshold=None,
     ):
-
+        if gradient_threshold is not None:
+            print(f"INFO: clipping gradients at {gradient_threshold:.2g}")
         # Make sure the control file for learning rate is consistent with main.py, at least at first
         self.prepareLog()
         self.initLearningRateControl(learningRateModel, learningRateWeights)
@@ -1445,6 +2328,9 @@ class pinn(Model):
         true_epoch_num = 0
         self.printed_start_SA = False
 
+        self.run_SGD = True
+        self.run_LBFGS = False
+
         for epoch in range(self.nEpochs):
             if epoch > 0:
                 old_mse_loss = train_mse_loss
@@ -1457,7 +2343,7 @@ class pinn(Model):
                 self.lr_w_epoch_start = lr_w
             if self.useLossThreshold:
                 self.lt_epoch_start = lt
-            if self.gradualTime:
+            if self.gradualTime_sgd:
                 if self.nEpochs > 3:
                     new_tmax = (
                         (
@@ -1478,6 +2364,8 @@ class pinn(Model):
                     print("")
                     print("tmax = ", new_tmax)
                     print("")
+                    if epoch >= start_weight_training_epoch:
+                        start_weight_training_epoch += 1
             else:
                 new_tmax = None
 
@@ -1551,7 +2439,6 @@ class pinn(Model):
                         train_dataset_cs_c,
                     )
                 ):
-
                     self.total_step = step + true_epoch_num * self.n_batch
                     self.step = step
 
@@ -1672,6 +2559,7 @@ class pinn(Model):
                             data_col_weights=sliced_data_col_weights,
                             reg_col_weights=sliced_reg_col_weights,
                             tmax=new_tmax,
+                            gradient_threshold=gradient_threshold,
                         )
                         (
                             grads_model,
@@ -1685,6 +2573,137 @@ class pinn(Model):
                         tot_grad_bound.append(grads_bound_col)
                         tot_grad_data.append(grads_data_col)
                         tot_grad_reg.append(grads_reg_col)
+
+                    elif self.annealingWeights:
+                        time_s = time.time()
+                        loss_info = self.train_step_annealing(
+                            x_batch_trainList=x_batch_trainList,
+                            x_cs_batch_trainList=x_cs_batch_trainList,
+                            x_params_batch_trainList=x_params_batch_trainList,
+                            y_batch_trainList=y_batch_trainList,
+                            data_loss_weights=self.data_loss_weights,
+                            int_col_pts=int_col_pts,
+                            int_col_params=int_col_params,
+                            int_loss_weights=self.int_loss_weights,
+                            bound_col_pts=bound_col_pts,
+                            bound_col_params=bound_col_params,
+                            bound_loss_weights=self.bound_loss_weights,
+                            reg_col_pts=reg_col_pts,
+                            reg_col_params=reg_col_params,
+                            reg_loss_weights=self.reg_loss_weights,
+                            tmax=new_tmax,
+                            gradient_threshold=gradient_threshold,
+                        )
+                        grads_model = loss_info[9]
+                        if epoch >= start_weight_training_epoch:
+                            max_grad_int = loss_info[10]
+                            max_grad_bound = loss_info[11]
+                            max_grad_data = loss_info[12]
+                            max_grad_reg = loss_info[13]
+                            mean_grads_int = loss_info[14]
+                            mean_grads_bound = loss_info[15]
+                            mean_grads_data = loss_info[16]
+                            mean_grads_reg = loss_info[17]
+                            allmax = []
+                            if self.activeInt:
+                                allmax += max_grad_int
+                            if self.activeBound:
+                                allmax += max_grad_bound
+                            if self.activeData:
+                                allmax += max_grad_data
+                            if self.activeReg:
+                                allmax += max_grad_reg
+                            if not self.annealingMaxSet:
+                                # Find smallest maximum
+                                max_grad_id = np.argmax(allmax)
+                                max_grad_int_id = np.argmax(max_grad_int)
+                                max_grad_bound_id = np.argmax(max_grad_bound)
+                                max_grad_data_id = np.argmax(max_grad_data)
+                                max_grad_reg_id = np.argmax(max_grad_reg)
+                                int_ref = False
+                                bound_ref = False
+                                data_ref = False
+                                reg_ref = False
+                                if self.activeInt and abs(
+                                    allmax[max_grad_id]
+                                    - max_grad_int[max_grad_int_id]
+                                ) < np.float64(1e-12):
+                                    int_ref = True
+                                if self.activeBound and abs(
+                                    allmax[max_grad_id]
+                                    - max_grad_bound[max_grad_bound_id]
+                                ) < np.float64(1e-12):
+                                    bound_ref = True
+                                if self.activeData and abs(
+                                    allmax[max_grad_id]
+                                    - max_grad_data[max_grad_data_id]
+                                ) < np.float64(1e-12):
+                                    data_ref = True
+                                if self.activeReg and abs(
+                                    allmax[max_grad_id]
+                                    - max_grad_reg[max_grad_reg_id]
+                                ) < np.float64(1e-12):
+                                    reg_ref = True
+                                self.annealingMaxSet = True
+                            maxGradRef = allmax[max_grad_id]
+                            # tf.print(maxGradRef)
+                            # tf.print(mean_grads_int[2])
+                            # breakpoint()
+                            for i in range(len(self.interiorTerms_rescale)):
+                                if int_ref and i == max_grad_int_id:
+                                    continue
+                                self.int_loss_weights[i] = np.clip(
+                                    self.int_loss_weights[i]
+                                    * (np.float64(1.0) - self.alpha_anneal)
+                                    + self.alpha_anneal
+                                    * maxGradRef
+                                    / (mean_grads_int[i] + np.float64(1e-16)),
+                                    a_min=np.float64(1e-1),
+                                    a_max=np.float64(1e6),
+                                )
+                            for i in range(len(self.boundaryTerms_rescale)):
+                                if bound_ref and i == max_grad_bound_id:
+                                    continue
+                                self.bound_loss_weights[i] = np.clip(
+                                    self.bound_loss_weights[i]
+                                    * (np.float64(1.0) - self.alpha_anneal)
+                                    + self.alpha_anneal
+                                    * maxGradRef
+                                    / (
+                                        mean_grads_bound[i] + np.float64(1e-16)
+                                    ),
+                                    a_min=np.float64(1e-1),
+                                    a_max=np.float64(1e6),
+                                )
+                            for i in range(len(self.dataTerms_rescale)):
+                                if data_ref and i == max_grad_data_id:
+                                    continue
+                                self.data_loss_weights[i] = np.clip(
+                                    self.data_loss_weights[i]
+                                    * (np.float64(1.0) - self.alpha_anneal)
+                                    + self.alpha_anneal
+                                    * maxGradRef
+                                    / (mean_grads_data[i] + np.float64(1e-16)),
+                                    a_min=np.float64(1e-1),
+                                    a_max=np.float64(1e6),
+                                )
+                            for i in range(len(self.regTerms_rescale)):
+                                if reg_ref and i == max_grad_reg_id:
+                                    continue
+                                self.reg_loss_weights[i] = np.clip(
+                                    self.reg_loss_weights[i]
+                                    * (np.float64(1.0) - self.alpha_anneal)
+                                    + self.alpha_anneal
+                                    * maxGradRef
+                                    / (mean_grads_reg[i] + np.float64(1e-16)),
+                                    a_min=np.float64(1e-1),
+                                    a_max=np.float64(1e6),
+                                )
+
+                            # tf.print("int weight = ", self.int_loss_weights)
+                            # tf.print(
+                            #    "bound weight = ", self.bound_loss_weights
+                            # )
 
                     else:
                         time_s = time.time()
@@ -1700,6 +2719,7 @@ class pinn(Model):
                             reg_col_pts=reg_col_pts,
                             reg_col_params=reg_col_params,
                             tmax=new_tmax,
+                            gradient_threshold=gradient_threshold,
                         )
                         grads_model = loss_info[9]
 
@@ -1871,13 +2891,26 @@ class pinn(Model):
                     if train_mse_loss < min_mse_loss:
                         min_mse_loss = train_mse_loss
 
-                self.model.save_weights(
+                safe_save(
+                    self.model,
                     os.path.join(self.modelFolder, "lastSGD.h5"),
                     overwrite=True,
                 )
-                self.model.save_weights(
-                    os.path.join(self.modelFolder, "last.h5"), overwrite=True
+                safe_save(
+                    self.model,
+                    os.path.join(self.modelFolder, "last.h5"),
+                    overwrite=True,
                 )
+                if (true_epoch_num * self.n_batch) % 1000 == 0:
+                    safe_save(
+                        self.model,
+                        os.path.join(
+                            self.modelFolder,
+                            f"step_{true_epoch_num * self.n_batch}.h5",
+                        ),
+                        overwrite=True,
+                    )
+                    print("\nSaved weights")
 
                 true_epoch_num += 1
 
@@ -1888,11 +2921,11 @@ class pinn(Model):
                     loss_increase_occurence += 1
 
                 if self.useLossThreshold:
-                    if self.gradualTime and epoch < self.nEpochs // 2:
+                    if self.gradualTime_sgd and epoch < self.nEpochs // 2:
                         if (
                             loss_increase_occurence >= 3
                             or currentEpoch_it
-                            >= min(inner_epochs * 5, self.nEpochs // 2)
+                            >= min(inner_epochs, self.nEpochs // 2)
                         ):
                             loss_increase_occurence = 0
                             currentEpoch_it = 0
@@ -1919,7 +2952,6 @@ class pinn(Model):
                                 > 1.0
                                 and (train_mse_loss / old_mse_loss) > 1.0
                             ):
-
                                 self.force_decrease_lrm_lrw(
                                     lr_m,
                                     learningRateModelFinal,
@@ -1960,10 +2992,13 @@ class pinn(Model):
                     break
 
         if self.lbfgs:
-            print("Starting L-BFGS training")
+            print("\nStarting L-BFGS training")
             if self.dynamicAttentionWeights:
+                self.flatIntColOnes = [
+                    tf.ones((self.n_int, 1), dtype=tf.dtypes.float64)
+                ] * len(self.interiorTerms_rescale)
                 if self.activeInt:
-                    flatIntColWeights = [
+                    self.flatIntColWeights = [
                         tf.reshape(
                             tf.convert_to_tensor(
                                 np.array(
@@ -1978,11 +3013,14 @@ class pinn(Model):
                         for i in range(len(self.interiorTerms_rescale))
                     ]
                 else:
-                    flatIntColWeights = [
+                    self.flatIntColWeights = [
                         tf.zeros((self.n_batch), dtype=tf.dtypes.float64)
                     ]
+                self.flatBoundColOnes = [
+                    tf.ones((self.n_bound, 1), dtype=tf.dtypes.float64)
+                ] * len(self.boundaryTerms_rescale)
                 if self.activeBound:
-                    flatBoundColWeights = [
+                    self.flatBoundColWeights = [
                         tf.reshape(
                             tf.convert_to_tensor(
                                 np.array(
@@ -1997,11 +3035,14 @@ class pinn(Model):
                         for i in range(len(self.boundaryTerms_rescale))
                     ]
                 else:
-                    flatBoundColWeights = [
+                    self.flatBoundColWeights = [
                         tf.zeros((self.n_batch), dtype=tf.dtypes.float64)
                     ]
+                self.flatDataColOnes = [
+                    tf.ones((self.n_data, 1), dtype=tf.dtypes.float64)
+                ] * len(self.dataTerms_rescale)
                 if self.activeData:
-                    flatDataColWeights = [
+                    self.flatDataColWeights = [
                         tf.reshape(
                             tf.convert_to_tensor(
                                 np.array(
@@ -2016,11 +3057,14 @@ class pinn(Model):
                         for i in range(len(self.dataTerms_rescale))
                     ]
                 else:
-                    flatDataColWeights = [
+                    self.flatDataColWeights = [
                         tf.zeros((self.n_batch), dtype=tf.dtypes.float64)
                     ]
+                self.flatRegColOnes = [
+                    tf.ones((self.n_reg, 1), dtype=tf.dtypes.float64)
+                ] * len(self.regTerms_rescale)
                 if self.activeReg:
-                    flatRegColWeights = [
+                    self.flatRegColWeights = [
                         tf.reshape(
                             tf.convert_to_tensor(
                                 np.array(
@@ -2035,11 +3079,11 @@ class pinn(Model):
                         for i in range(len(self.regTerms_rescale))
                     ]
                 else:
-                    flatRegColWeights = [
+                    self.flatRegColWeights = [
                         tf.zeros((self.n_batch), dtype=tf.dtypes.float64)
                     ]
 
-            if self.gradualTime:
+            if self.gradualTime_sgd or self.gradualTime_lbfgs:
                 tmax = self.params["tmax"]
             else:
                 tmax = None
@@ -2048,74 +3092,79 @@ class pinn(Model):
             if self.collocationMode.lower() == "random":
                 changeSetUp = True
                 self.collocationMode = "fixed"
+            self.run_SGD = False
+            self.run_LBFGS = True
 
-            if self.dynamicAttentionWeights:
-                loss_and_flat_grad = self.get_loss_and_flat_grad_SA(
-                    self.int_col_pts,
-                    self.int_col_params,
-                    self.bound_col_pts,
-                    self.bound_col_params,
-                    self.reg_col_pts,
-                    self.reg_col_params,
-                    flatIntColWeights,
-                    flatBoundColWeights,
-                    flatDataColWeights,
-                    flatRegColWeights,
-                    [tf.convert_to_tensor(x) for x in self.xDataList_full],
-                    [
-                        tf.convert_to_tensor(x)
-                        for x in self.x_params_dataList_full
-                    ],
-                    [tf.convert_to_tensor(y) for y in self.yDataList_full],
-                    self.n_batch_lbfgs,
-                    tmax=tmax,
-                )
-            else:
-                loss_and_flat_grad = self.get_loss_and_flat_grad(
-                    self.int_col_pts,
-                    self.int_col_params,
-                    self.bound_col_pts,
-                    self.bound_col_params,
-                    self.reg_col_pts,
-                    self.reg_col_params,
-                    [tf.convert_to_tensor(x) for x in self.xDataList_full],
-                    [
-                        tf.convert_to_tensor(x)
-                        for x in self.x_params_dataList_full
-                    ],
-                    [tf.convert_to_tensor(y) for y in self.yDataList_full],
-                    self.n_batch_lbfgs,
-                    tmax=tmax,
-                )
+            nRemainingEp_lbfgs = self.nEpochs_lbfgs
+            nDoneEp_lbfgs = 0
+            if self.gradualTime_lbfgs:
+                for istep_lbfgs in range(self.n_gradual_steps_lbfgs):
+                    new_tmax = self.gradualTimeSchedule_lbfgs[istep_lbfgs]
+                    print("")
+                    print(f"GRAD {istep_lbfgs+1}/{self.n_gradual_steps_lbfgs}")
+                    print("tmax = ", new_tmax)
+                    print("")
+                    bestLoss = self.runLBFGS(
+                        tmax=new_tmax,
+                        nIter=self.nEpochs_start_lbfgs
+                        + self.nEp_per_gradual_step,
+                        epochDoneLBFGS=nDoneEp_lbfgs,
+                        epochDoneSGD=true_epoch_num,
+                        bestLoss=bestLoss,
+                        learningRateLBFGS=learningRateLBFGS,
+                        gradient_threshold=gradient_threshold,
+                    )
+                    nRemainingEp_lbfgs -= self.nEp_per_gradual_step
+                    nDoneEp_lbfgs += (
+                        self.nEpochs_start_lbfgs + self.nEp_per_gradual_step
+                    )
 
-            lbfgs(
-                loss_and_flat_grad,
-                self.get_weights(self.model),
-                Struct(),
-                model=self.model,
+            print("")
+
+            bestLoss = self.runLBFGS(
+                tmax=tmax,
+                nIter=nRemainingEp_lbfgs,
+                epochDoneLBFGS=nDoneEp_lbfgs,
+                epochDoneSGD=true_epoch_num,
                 bestLoss=bestLoss,
-                modelFolder=self.modelFolder,
-                maxIter=self.nEpochs_lbfgs,
-                learningRate=learningRateLBFGS,
-                dynamicAttention=self.dynamicAttentionWeights,
-                logLossFolder=self.logLossFolder,
-                nEpochStart=true_epoch_num,
-                nBatchSGD=self.n_batch,
-                nEpochs_start_lbfgs=self.nEpochs_start_lbfgs,
+                learningRateLBFGS=learningRateLBFGS,
+                gradient_threshold=gradient_threshold,
             )
 
             if changeSetUp:
                 self.collocationMode = "random"
 
-            self.model.save_weights(
-                os.path.join(self.modelFolder, "last.h5"), overwrite=True
+            safe_save(
+                self.model,
+                os.path.join(self.modelFolder, "last.h5"),
+                overwrite=True,
             )
+
+        if self.gradualTime_sgd or self.gradualTime_lbfgs:
+            tmax = self.params["tmax"]
+        else:
+            tmax = None
+        unweighted_loss = self.get_unweighted_loss(
+            self.int_col_pts,
+            self.int_col_params,
+            self.bound_col_pts,
+            self.bound_col_params,
+            self.reg_col_pts,
+            self.reg_col_params,
+            [tf.convert_to_tensor(x) for x in self.xDataList_full],
+            [tf.convert_to_tensor(x) for x in self.x_params_dataList_full],
+            [tf.convert_to_tensor(y) for y in self.yDataList_full],
+            self.n_batch_lbfgs,
+            tmax=tmax,
+        )
+
+        return unweighted_loss
 
     def prepareLog(self):
         os.makedirs(self.modelFolder, exist_ok=True)
         os.makedirs(self.logLossFolder, exist_ok=True)
         try:
-            os.remove(os.path.join(self.modelFolder, "config.npy"))
+            os.remove(os.path.join(self.modelFolder, "config.json"))
         except:
             pass
         try:
@@ -2138,26 +3187,76 @@ class pinn(Model):
             os.remove(os.path.join(self.logLossFolder, "regTerms.csv"))
         except:
             pass
+        if self.annealingWeights:
+            try:
+                os.remove(
+                    os.path.join(self.logLossFolder, "int_loss_weights.csv")
+                )
+            except:
+                pass
+            try:
+                os.remove(
+                    os.path.join(self.logLossFolder, "bound_loss_weights.csv")
+                )
+            except:
+                pass
+            try:
+                os.remove(
+                    os.path.join(self.logLossFolder, "data_loss_weights.csv")
+                )
+            except:
+                pass
+            try:
+                os.remove(
+                    os.path.join(self.logLossFolder, "reg_loss_weights.csv")
+                )
+            except:
+                pass
 
         # Save model configuration
-        np.save(os.path.join(self.modelFolder, "config.npy"), self.config)
+        with open(
+            os.path.join(self.modelFolder, "config.json"), "w+"
+        ) as outfile:
+            json.dump(self.config, outfile, indent=4, sort_keys=True)
 
         # Make log headers
         f = open(os.path.join(self.logLossFolder, "log.csv"), "a+")
-        f.write("epoch;mseloss\n")
+        f.write("epoch;step;mseloss\n")
         f.close()
         f = open(os.path.join(self.logLossFolder, "interiorTerms.csv"), "a+")
-        f.write("epoch;lossArray\n")
+        f.write("step;lossArray\n")
         f.close()
         f = open(os.path.join(self.logLossFolder, "boundaryTerms.csv"), "a+")
-        f.write("epoch;lossArray\n")
+        f.write("step;lossArray\n")
         f.close()
         f = open(os.path.join(self.logLossFolder, "dataTerms.csv"), "a+")
-        f.write("epoch;lossArray\n")
+        f.write("step;lossArray\n")
         f.close()
         f = open(os.path.join(self.logLossFolder, "regTerms.csv"), "a+")
-        f.write("epoch;lossArray\n")
+        f.write("step;lossArray\n")
         f.close()
+        if self.annealingWeights:
+            f = open(
+                os.path.join(self.logLossFolder, "int_loss_weights.csv"), "a+"
+            )
+            f.write("step;weightArray\n")
+            f.close()
+            f = open(
+                os.path.join(self.logLossFolder, "bound_loss_weights.csv"),
+                "a+",
+            )
+            f.write("step;weightArray\n")
+            f.close()
+            f = open(
+                os.path.join(self.logLossFolder, "data_loss_weights.csv"), "a+"
+            )
+            f.write("step;weightArray\n")
+            f.close()
+            f = open(
+                os.path.join(self.logLossFolder, "reg_loss_weights.csv"), "a+"
+            )
+            f.write("step;weightArray\n")
+            f.close()
 
     def initLearningRateControl(
         self, learningRateModel, learningRateWeights=None
@@ -2335,11 +3434,12 @@ class pinn(Model):
         return change > 1e-6
 
     def logTraining(self, epoch, mse, bestLoss, mse_unweighted=None):
-
         f = open(os.path.join(self.logLossFolder, "log.csv"), "a+")
         if self.dynamicAttentionWeights:
             f.write(
                 str(int(epoch))
+                + ";"
+                + str(int(epoch * self.n_batch))
                 + ";"
                 + str(mse.numpy())
                 + ";"
@@ -2347,7 +3447,14 @@ class pinn(Model):
                 + "\n"
             )
         else:
-            f.write(str(int(epoch)) + ";" + str(mse.numpy()) + "\n")
+            f.write(
+                str(int(epoch))
+                + ";"
+                + str(int(epoch * self.n_batch))
+                + ";"
+                + str(mse.numpy())
+                + "\n"
+            )
         f.close()
 
         if mse_unweighted is None:
@@ -2356,8 +3463,10 @@ class pinn(Model):
             epochLoss = mse_unweighted
 
         # Save model weights
-        self.model.save_weights(
-            os.path.join(self.modelFolder, "lastSGD.h5"), overwrite=True
+        safe_save(
+            self.model,
+            os.path.join(self.modelFolder, "lastSGD.h5"),
+            overwrite=True,
         )
 
         if self.collocationMode.lower() == "fixed":
@@ -2435,7 +3544,7 @@ class pinn(Model):
                 ],
                 allow_pickle=True,
             )
-            if self.gradualTime:
+            if self.gradualTime_sgd:
                 np.save(
                     os.path.join(self.modelFolder, "t_int_col.npy"),
                     self.stretchT(
@@ -2545,8 +3654,10 @@ class pinn(Model):
 
         if bestLoss is None or epochLoss < bestLoss:
             bestLoss = epochLoss
-            self.model.save_weights(
-                os.path.join(self.modelFolder, "best.h5"), overwrite=True
+            safe_save(
+                self.model,
+                os.path.join(self.modelFolder, "best.h5"),
+                overwrite=True,
             )
             # tf.print("SAVING")
         return bestLoss
@@ -2621,5 +3732,65 @@ class pinn(Model):
             f.write(str(int(step)) + ";" + str(regTermsArrayPercent) + "\n")
             f.write(str(int(step)) + ";" + str(regTermsArray) + "\n")
             f.close()
+
+            if self.annealingWeights:
+                if self.activeInt:
+                    int_weights_array = []
+                    for weight in self.int_loss_weights:
+                        try:
+                            int_weights_array.append(weight.numpy())
+                        except:
+                            int_weights_array.append(weight)
+                else:
+                    int_weights_array = []
+                f = open(
+                    os.path.join(self.logLossFolder, "int_loss_weights.csv"),
+                    "a+",
+                )
+                f.write(str(int(step)) + ";" + str(int_weights_array) + "\n")
+                f.close()
+                if self.activeBound:
+                    bound_weights_array = []
+                    for weight in self.bound_loss_weights:
+                        try:
+                            bound_weights_array.append(weight.numpy())
+                        except:
+                            bound_weights_array.append(weight)
+                else:
+                    bound_weights_array = []
+                f = open(
+                    os.path.join(self.logLossFolder, "bound_loss_weights.csv"),
+                    "a+",
+                )
+                f.write(str(int(step)) + ";" + str(bound_weights_array) + "\n")
+                f.close()
+                if self.activeData:
+                    for weight in self.data_loss_weights:
+                        try:
+                            data_weights_array.append(weight.numpy())
+                        except:
+                            data_weights_array.append(weight)
+                else:
+                    data_weights_array = []
+                f = open(
+                    os.path.join(self.logLossFolder, "data_loss_weights.csv"),
+                    "a+",
+                )
+                f.write(str(int(step)) + ";" + str(data_weights_array) + "\n")
+                f.close()
+                if self.activeReg:
+                    for weight in self.reg_loss_weights:
+                        try:
+                            reg_weights_array.append(weight.numpy())
+                        except:
+                            reg_weights_array.append(weight)
+                else:
+                    reg_weights_array = []
+                f = open(
+                    os.path.join(self.logLossFolder, "reg_loss_weights.csv"),
+                    "a+",
+                )
+                f.write(str(int(step)) + ";" + str(reg_weights_array) + "\n")
+                f.close()
 
         return

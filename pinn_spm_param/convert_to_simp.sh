@@ -1,3 +1,5 @@
+# DONT FORGET BayesianCalibration_spm
+
 declare -a fileArrayToLeave=(\
                      )
 
@@ -14,7 +16,7 @@ function list_include_item {
 }
 
 # Files to operate on
-fileArray=($(grep -rl "float32" . | grep -v "__pycache__" | grep -v "README" | grep -v "convert_to_float64" | grep -v "convert_to_float32" | grep -v "Model" | grep -v "Log" | grep -v "slurm"))
+fileArray=($(grep -rl "\-nosimp" . | grep -v "__pycache__" | grep -v "README" | grep -v "argument.py" | grep -v "convert_to_" | grep -v "Model" | grep -v "Log" | grep -v "slurm"))
 length=${#fileArray[@]}
 
 # Iterate the string array
@@ -23,7 +25,7 @@ do
     file="${fileArray[$i]}"
     if ! `list_include_item "$fileArrayToLeave" "${fileArray[$i]}"` ; then
       echo $file
-      sed -i.bu 's/float32/float64/g' $file
+      sed -i.bu 's/\-nosimp/\-simp/g' $file
       rm $file.bu
     fi
 done
