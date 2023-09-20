@@ -472,13 +472,6 @@ def setParams(params, deg, bat, an, sep, ca, ic):
 
     params["phis_c0"] = phis_c0_fun
 
-    ## RESCALE CORRECTION
-    # params["rescale_phie"] = abs(np.float64(-0.055) - np.float64(-0.04))  # OK
-    # params["rescale_cs_a"] = abs(np.float64(25) - params["cs_a0"])  # OK
-    # params["rescale_cs_c"] = abs(np.float64(22) - params["cs_c0"])  # OK
-    # params["rescale_phis_c"] = abs(np.float64(4.3) - np.float64(4.5))  # OK
-    # print(params["rescale_phis_c"])
-    # print(params["rescale_phie"])
     # RESCALE CORRECTION
     params["rescale_cs_a"] = -ic.an.cs
     params["rescale_cs_c"] = params["cscamax"] - ic.ca.cs
@@ -488,10 +481,5 @@ def setParams(params, deg, bat, an, sep, ca, ic):
     params["rescale_phie"] = abs(
         np.float64(-0.15) - np.float64(-0.07645356566609385)
     )  # OK
-
-    # params["rescale_phie"] = abs(np.float64(-0.14) - np.float64(-0.09))  # OK
-    # params["rescale_cs_a"] = abs(np.float64(12) - params["cs_a0"])  # OK
-    # params["rescale_cs_c"] = abs(np.float64(40) - params["cs_c0"])  # OK
-    # params["rescale_phis_c"] = abs(np.float64(3.8) - np.float64(4.5))  # OK
 
     return params

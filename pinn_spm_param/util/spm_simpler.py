@@ -59,13 +59,11 @@ def makeParams():
 
         class Anode_el:
             def __init__(self):
-                # self.eps = np.float64(0.374)
                 self.eps = np.float64(0.4)
 
         class Anode_solids:
             def __init__(self):
                 self.eps = np.float64(0.5430727763)
-                # self.pe = np.float64(2.2)
                 self.pe = np.float64(2.0)
 
         class Anode_CBD:
@@ -76,7 +74,6 @@ def makeParams():
         def __init__(self):
             self.thickness = np.float64(20 * 1e-6)
             self.A = np.float64(1.4e-3)
-            # self.pe = np.float64(2.4)
             self.pe = np.float64(2.0)
             self.alpha = np.float64(0.5)
             self.el = self.Separator_el()
@@ -110,7 +107,6 @@ def makeParams():
 
         class Cathode_el:
             def __init__(self):
-                # self.eps = np.float64(0.331)
                 self.eps = np.float64(0.4)
 
         class Cathode_solids:

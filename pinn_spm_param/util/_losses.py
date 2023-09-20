@@ -14,7 +14,6 @@ else:
     optimized = False
 
 
-# @conditional_decorator(tf.function,optimized)
 def loss_fn_lbfgs_SA(
     interiorTerms,
     boundaryTerms,
@@ -29,31 +28,24 @@ def loss_fn_lbfgs_SA(
     # Interior loss
     int_loss = np.float64(0.0)
     for iterm, term in enumerate(interiorTerms):
-        # print('int min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         int_loss += tf.reduce_mean(tf.square(int_col_weights[iterm] * term))
-    # int_loss = int_loss
 
     # Boundary loss
     bound_loss = np.float64(0.0)
     for iterm, term in enumerate(boundaryTerms):
-        # print('bound min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         bound_loss += tf.reduce_mean(
             tf.square(bound_col_weights[iterm] * term)
         )
-    # bound_loss = bound_loss
 
     # Data loss
     data_loss = np.float64(0.0)
     for iterm, term in enumerate(dataTerms):
-        # print('int min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         data_loss += tf.reduce_mean(tf.square(data_col_weights[iterm] * term))
 
     # Reg loss
     reg_loss = np.float64(0.0)
     for iterm, term in enumerate(regularizationTerms):
-        # print('int min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         reg_loss += tf.reduce_mean(tf.square(reg_col_weights[iterm] * term))
-    # int_loss = int_loss
 
     global_loss = (
         alpha[0] * int_loss
@@ -70,37 +62,28 @@ def loss_fn_lbfgs_SA(
     )
 
 
-# @conditional_decorator(tf.function,optimized)
 def loss_fn_lbfgs(
     interiorTerms, boundaryTerms, dataTerms, regularizationTerms, alpha
 ):
     # Interior loss
     int_loss = np.float64(0.0)
     for iterm, term in enumerate(interiorTerms):
-        # print('int min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         int_loss += tf.reduce_mean(tf.square(term))
-    # int_loss = int_loss
 
     # Boundary loss
     bound_loss = np.float64(0.0)
     for iterm, term in enumerate(boundaryTerms):
-        # print('bound min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         bound_loss += tf.reduce_mean(tf.square(term))
-    # bound_loss = bound_loss
 
     # Data loss
     data_loss = np.float64(0.0)
     for iterm, term in enumerate(dataTerms):
-        # print('data min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
-        # print(tf.reduce_mean(tf.square(term)))
         data_loss += tf.reduce_mean(tf.square(term))
 
     # Reg loss
     reg_loss = np.float64(0.0)
     for iterm, term in enumerate(regularizationTerms):
-        # print('int min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         reg_loss += tf.reduce_mean(tf.square(term))
-    # int_loss = int_loss
 
     global_loss = (
         alpha[0] * int_loss
@@ -118,7 +101,6 @@ def loss_fn_lbfgs(
     )
 
 
-# @conditional_decorator(tf.function,optimized)
 def loss_fn_lbfgs_annealing(
     interiorTerms,
     boundaryTerms,
@@ -133,32 +115,24 @@ def loss_fn_lbfgs_annealing(
     # Interior loss
     int_loss = np.float64(0.0)
     for iterm, term in enumerate(interiorTerms):
-        # print('int min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         int_loss += int_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
-    # int_loss = int_loss
 
     # Boundary loss
     bound_loss = np.float64(0.0)
     for iterm, term in enumerate(boundaryTerms):
-        # print('bound min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         bound_loss += bound_loss_weights[iterm] * tf.reduce_mean(
             tf.square(term)
         )
-    # bound_loss = bound_loss
 
     # Data loss
     data_loss = np.float64(0.0)
     for iterm, term in enumerate(dataTerms):
-        # print('data min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
-        # print(tf.reduce_mean(tf.square(term)))
         data_loss += data_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
 
     # Reg loss
     reg_loss = np.float64(0.0)
     for iterm, term in enumerate(regularizationTerms):
-        # print('int min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         reg_loss += reg_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
-    # int_loss = int_loss
 
     global_loss = (
         alpha[0] * int_loss
@@ -249,7 +223,6 @@ def loss_fn_dynamicAttention_tensor(
     )
 
 
-# @conditional_decorator(tf.function,optimized)
 def loss_fn_annealing(
     interiorTerms,
     boundaryTerms,
@@ -270,7 +243,6 @@ def loss_fn_annealing(
     for iterm, term in enumerate(interiorTerms):
         int_loss_terms[iterm] = tf.reduce_mean(tf.square(term))
         int_loss += int_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
-    # int_loss = int_loss * alpha[0]
 
     # Boundary loss
     bound_loss = np.float64(0.0)
@@ -279,23 +251,18 @@ def loss_fn_annealing(
         bound_loss += bound_loss_weights[iterm] * tf.reduce_mean(
             tf.square(term)
         )
-    # bound_loss = bound_loss * alpha[1]
 
     # Data loss
     data_loss = np.float64(0.0)
     for iterm, term in enumerate(dataTerms):
         data_loss_terms[iterm] = tf.reduce_mean(tf.square(term))
         data_loss += data_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
-    # data_loss = data_loss * alpha[2]
 
     # Regularization loss
     reg_loss = np.float64(0.0)
     for iterm, term in enumerate(regularizationTerms):
         reg_loss_terms[iterm] = tf.reduce_mean(tf.square(term))
         reg_loss += reg_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
-    # reg_loss = reg_loss * alpha[3]
-
-    # tf.print(int_loss_weights)
 
     return (
         int_loss + bound_loss + data_loss + reg_loss,
@@ -306,54 +273,31 @@ def loss_fn_annealing(
     )
 
 
-# @conditional_decorator(tf.function,optimized)
 def loss_fn(
     interiorTerms, boundaryTerms, dataTerms, regularizationTerms, alpha
 ):
-    # print("int_col_weights = ", int_col_weights)
     # Interior loss
-    # print("interior")
     int_loss = np.float64(0.0)
     for iterm, term in enumerate(interiorTerms):
-        # print(iterm)
-        # print(tf.shape(term))
-        # print(tf.shape(tf.square(term)))
-        # print('int min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
-        # stop
         int_loss += tf.reduce_mean(tf.square(term))
 
     int_loss = int_loss * alpha[0]
 
     # Boundary loss
-    # print("boundary")
     bound_loss = np.float64(0.0)
     for iterm, term in enumerate(boundaryTerms):
-        # print(iterm)
-        # print(tf.shape(term))
-        # print(tf.shape(tf.square(term)))
-        # print('bound min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         bound_loss += tf.reduce_mean(tf.square(term))
     bound_loss = bound_loss * alpha[1]
 
     # Data loss
-    # print("data")
     data_loss = np.float64(0.0)
     for iterm, term in enumerate(dataTerms):
-        # print(iterm)
-        # print(tf.shape(term))
-        # print(tf.shape(tf.square(term)))
-        # print('data min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         data_loss += tf.reduce_mean(tf.square(term))
     data_loss = data_loss * alpha[2]
 
     # Regularization loss
-    # print("reg")
     reg_loss = np.float64(0.0)
     for iterm, term in enumerate(regularizationTerms):
-        # print(iterm)
-        # print(tf.shape(term))
-        # print(tf.shape(tf.square(term)))
-        # print('reg min %.2f max %.2f ' % (np.amin(term), np.amax(term) ) )
         reg_loss += tf.reduce_mean(tf.square(term))
     reg_loss = reg_loss * alpha[3]
 
@@ -1147,11 +1091,7 @@ def setResidualRescaling(self, weights):
         self.interiorTerms_rescale_unweighted = [np.float64(0.0)]
         self.interiorTerms_rescale = [np.float64(0.0)]
 
-    # print ("interior rescale = ",self.interiorTerms_rescale)
-
     # Boundary Residuals
-    # self.cs_a_bound_resc = R_a / cs_a
-    # self.cs_c_bound_resc = R_c / cs_c
     self.cs_a_bound_resc = Ds_a / j_a
     self.cs_c_bound_resc = Ds_c / j_c
     self.cs_a_bound_j_resc = Ds_a / j_a
@@ -1191,7 +1131,6 @@ def setResidualRescaling(self, weights):
         self.boundaryTerms_rescale = [np.float64(0.0)]
         self.boundaryTerms_rescale_unweighted = [np.float64(0.0)]
 
-    # print ("boundary rescale = ",self.boundaryTerms_rescale)
 
     # Data Residuals
     self.n_data_terms = 4
@@ -1247,7 +1186,6 @@ def setResidualRescaling(self, weights):
         self.dataTerms_rescale_unweighted = [np.float64(0.0)]
         self.dataTerms_rescale = [np.float64(0.0)]
         self.csDataTerms_ind = []
-    # print ("data rescale = ",self.dataTerms_rescale)
 
     # Regularization Residuals
     if self.activeReg:
@@ -1256,25 +1194,6 @@ def setResidualRescaling(self, weights):
     else:
         self.regTerms_rescale_unweighted = [np.float64(0.0)]
         self.regTerms_rescale = [np.float64(0.0)]
-    # print ("regularization rescale = ",self.regTerms_rescale)
-
-    # np.savez(
-    #    "rescaleTF_int",
-    #    phie=np.float64(1 / abs(self.phie_transp_resc)),
-    #    phis_c=np.float64(1 / abs(self.phis_c_transp_resc)),
-    #    cs_a=np.float64(1 / abs(self.cs_a_transp_resc)),
-    #    cs_c=np.float64(1 / abs(self.cs_c_transp_resc)),
-    #    cs_a_halfway=np.float64(1 / abs(self.cs_a_transp_resc)),
-    #    cs_c_halfway=np.float64(1 / abs(self.cs_c_transp_resc)),
-    # )
-
-    # np.savez(
-    #    "rescaleTF_bound",
-    #    cs_a_r0=np.float64(1 / abs(self.cs_a_bound_resc)),
-    #    cs_c_r0=np.float64(1 / abs(self.cs_c_bound_resc)),
-    #    cs_a_rRs=np.float64(1 / abs(self.cs_a_bound_j_resc)),
-    #    cs_c_rRs=np.float64(1 / abs(self.cs_c_bound_j_resc)),
-    # )
 
     return
 
@@ -1479,13 +1398,6 @@ def data_loss(
         clip=False,
     )
 
-    # print(np.amax(x_cs_batch_trainList[self.ind_cs_a_data - self.ind_cs_offset][:, self.ind_r]))
-    # stop
-
-    # print(cs_c_pred_rescaled - y_batch_trainList[self.ind_cs_c_data])
-    # print(np.mean((cs_c_pred_rescaled - y_batch_trainList[self.ind_cs_c_data])**2))
-    # stop
-
     return [
         [phie_pred_rescaled - y_batch_trainList[self.ind_phie_data]],
         [phis_c_pred_rescaled - y_batch_trainList[self.ind_phis_c_data]],
@@ -1685,9 +1597,6 @@ def interior_loss(self, int_col_pts=None, int_col_params=None, tmax=None):
         else:
             j_a = i0_a * eta_a / (self.params["R"] * self.params["T"])
 
-        # j_a_rhs = -self.params["I_discharge"] / (
-        #    self.params["F"] * self.params["A_a"]
-        # )
         j_a_rhs = self.params["j_a"]
 
         # ~~~~ cs
@@ -1696,8 +1605,6 @@ def interior_loss(self, int_col_pts=None, int_col_params=None, tmax=None):
             self.params["D_s_a"](self.params["T"], self.params["R"])
             + np.float64(0.0) * r_a
         )
-        # cs_a_r_Dsr2_r =  tape.gradient(cs_a_r_Dsr2, r_a)
-        # cs_a_r_Dsr2_r_r2 = cs_a_r_Dsr2_r / (r_a **2)
 
         # Equations at cathode
         # ~~~~ j
@@ -1731,9 +1638,6 @@ def interior_loss(self, int_col_pts=None, int_col_params=None, tmax=None):
         else:
             j_c = i0_c * eta_c / (self.params["R"] * self.params["T"])
 
-        # j_c_rhs = self.params["I_discharge"] / (
-        #    self.params["F"] * self.params["A_c"]
-        # )
         j_c_rhs = self.params["j_c"]
 
         # ~~~~ cs
@@ -1748,8 +1652,6 @@ def interior_loss(self, int_col_pts=None, int_col_params=None, tmax=None):
             )
             + np.float64(0.0) * r_c
         )
-        # cs_c_r_Dsr2_r = tape.gradient(cs_c_r_Dsr2, r_c)
-        # cs_c_r_Dsr2_r_r2 = cs_c_r_Dsr2_r / (r_c **2)
 
     # Equations at anode
     # ~~~~ cs
@@ -1766,58 +1668,10 @@ def interior_loss(self, int_col_pts=None, int_col_params=None, tmax=None):
     # Letting the tape go
     del tape
 
-    # res_a =  r_a * cs_a_t - r_a * cs_a_r_r * ds_a - np.float64(2.0) * ds_a * cs_a_r
-    # time_a = r_a * cs_a_t
-    # diff1_a = r_a * cs_a_r_r * ds_a
-    # diff2_a = np.float64(2.0) * ds_a * cs_a_r
-    # res_c =  r_c * cs_c_t - r_c * cs_c_r_r * ds_c - np.float64(2.0) * ds_c * cs_c_r
-    # time_c = r_c * cs_c_t
-    # diff1_c = r_c * cs_c_r_r * ds_c
-    # diff2_c = np.float64(2.0) * ds_c * cs_c_r
-    # if self.cs_a_transp_resc*np.amax(res_a)>1.0:
-    #    print("res_a large")
-    #    ind = np.argwhere(self.cs_a_transp_resc*res_a[:,0]>1.0)[0][0]
-    #    #breakpoint()
-    #    print("t = ",t[ind-3:ind+3,0])
-    #    print("r_a = ",r_a[ind-3:ind+3,0])
-    #    print("time = ",time_a[ind-3:ind+3,0])
-    #    print("diff1 = ",diff1_a[ind-3:ind+3,0])
-    #    print("diff2 = ",diff2_a[ind-3:ind+3,0])
-    #    print("res = ", res_a[ind-3:ind+3,0])
-    #    print("res_rescale = ", self.cs_a_transp_resc*res_a[ind-3:ind+3,0])
-    # if self.cs_c_transp_resc*np.amax(res_c)>1.0:
-    #    print("res_c large")
-    #    #breakpoint()
-    #    print("time = ",r_c* cs_c_t)
-    #    print("diff1 = ",r_c * cs_c_r_r * ds_c)
-    #    print("diff2 = ",ds_c * cs_c_r)
-    #    print("res = ", r_c * cs_c_t - r_c * cs_c_r_r * ds_c - np.float64(2.0) * ds_c * cs_c_r)
-    #    print("res_rescale = ", self.cs_c_transp_resc*(r_c * cs_c_t - r_c * cs_c_r_r * ds_c - np.float64(2.0) * ds_c * cs_c_r))
-
-    # print("rSurf_c = ", rSurf_c)
-    # print("t = ",t)
-    # print("j_c = ", j_c)
-    # print("j_c_rhs = ", j_c_rhs)
-    # print("i0_c = ", i0_c)
-    # print("eta_c = ", eta_c)
-    # print("(j_c-j_c_rhs)/j_c_rhs =", (j_c-j_c_rhs)/j_c_rhs)
-
     # List of residuals
     return [
         [j_a - j_a_rhs],
         [j_c - j_c_rhs],
-        # [
-        #    r_a * r_a * cs_a_t
-        #    - r_a * r_a * cs_a_r_r * ds_a
-        #    - r_a * np.float64(2.0) * ds_a * cs_a_r
-        #    - r_a * r_a * ds_a_r * cs_a_r
-        # ],  # cs at anode
-        # [
-        #    r_c * r_c * cs_c_t / deg_ds_c
-        #    - r_c * r_c * cs_c_r_r * ds_c / deg_ds_c
-        #    - r_c * np.float64(2.0) * ds_c * cs_c_r / deg_ds_c
-        #    - r_c * r_c * ds_c_r * cs_c_r
-        # ],  # cs at cathode
         [
             cs_a_t
             - cs_a_r_r * ds_a
@@ -1991,11 +1845,6 @@ def boundary_loss(self, bound_col_pts=None, bound_col_params=None, tmax=None):
             deg_ds_c_bound,
         )
 
-        # I = np.abs(self.params["I_discharge"])
-        # A_a = self.params["A_a"]
-        # A_c = self.params["A_c"]
-        # j_a = -I / (A_a * self.params["F"])
-        # j_c = I / (A_c * self.params["F"])
         j_a = self.params["j_a"]
         j_c = self.params["j_c"]
 

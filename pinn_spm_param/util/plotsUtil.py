@@ -164,7 +164,6 @@ def plotActiveSubspace(paramName, W, title=None):
     for axis in ["top", "bottom", "left", "right"]:
         ax.spines[axis].set_linewidth(2)
         ax.spines[axis].set_color("black")
-        # ax.spines[axis].set_zorder(0)
     plt.grid(color="k", linestyle="-", linewidth=0.5)
     try:
         plt.tight_layout()
@@ -245,7 +244,6 @@ def plotScatter(
 
     plt.plot(dataX[0::freq], dataY[0::freq], "o", color="k", markersize=3)
     if title is None:
-        # prettyLabels('feature '+str(xfeat),'feature '+str(yfeat),fontSize)
         prettyLabels("", "", fontSize)
     else:
         prettyLabels("", "", fontSize, title=title)
@@ -391,7 +389,6 @@ def pretty_bar_plot(
         for axis in ["top", "bottom", "left", "right"]:
             ax.spines[axis].set_linewidth(2)
             ax.spines[axis].set_color("black")
-        # loc='upper left', ncols=3)
         if ylim is not None:
             ax.set_ylim(ylim[0], ylim[1])
 
@@ -474,7 +471,6 @@ def pretty_bar_plot(
                         label=lab2,
                         color=bar_color[xlabel2.index(lab2)],
                     )
-                # ax.bar_label(rects, padding=3)
                 multiplier += 1
                 ax.errorbar(
                     x + offset,
@@ -502,7 +498,6 @@ def pretty_bar_plot(
                         label=lab2,
                         color=bar_color,
                     )
-                # ax.bar_label(rects, padding=3)
                 multiplier += 1
 
         # Add some text for labels, title and custom x-axis tick labels, etc.
@@ -527,7 +522,6 @@ def pretty_bar_plot(
 
         if len(xlabel2) > 1:
             plotLegend()
-        # loc='upper left', ncols=3)
         if ylim is not None:
             ax.set_ylim(ylim[0], ylim[1])
 

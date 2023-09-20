@@ -20,9 +20,7 @@ def makeParams():
 
             self.eff = np.float64(0.0)
             self.bounds[self.ind_i0_a] = [np.float64(0.5), np.float64(4)]
-            # self.bounds[self.ind_i0_a] = [np.float64(0.5), np.float64(0.5)]
             self.bounds[self.ind_ds_c] = [np.float64(1.0), np.float64(10)]
-            # self.bounds[self.ind_ds_c] = [np.float64(1.0), np.float64(1.0)]
             self.ref_vals[self.ind_i0_a] = np.float64(0.5)
             self.ref_vals[self.ind_ds_c] = np.float64(1.0)
 
@@ -60,13 +58,11 @@ def makeParams():
 
         class Anode_el:
             def __init__(self):
-                # self.eps = np.float64(0.374)
                 self.eps = np.float64(0.4)
 
         class Anode_solids:
             def __init__(self):
                 self.eps = np.float64(0.5430727763)
-                # self.pe = np.float64(2.2)
                 self.pe = np.float64(2.0)
 
         class Anode_CBD:
@@ -77,7 +73,6 @@ def makeParams():
         def __init__(self):
             self.thickness = np.float64(20 * 1e-6)
             self.A = np.float64(1.4e-3)
-            # self.pe = np.float64(2.4)
             self.pe = np.float64(2.0)
             self.alpha = np.float64(0.5)
             self.el = self.Separator_el()
@@ -111,7 +106,6 @@ def makeParams():
 
         class Cathode_el:
             def __init__(self):
-                # self.eps = np.float64(0.331)
                 self.eps = np.float64(0.4)
 
         class Cathode_solids:
@@ -329,65 +323,5 @@ if __name__ == "__main__":
     plotLegend()
     plt.savefig(os.path.join(figureFolder, "ds_c.png"))
     plt.close()
-
-    ## UOCP_a
-    # fig = plt.figure()
-    # cs = np.linspace(0, params["csanmax"], 100)
-    # u = params["Uocp_a"](cs, params["csanmax"])
-    # plt.plot(cs, u, color="k", linewidth=3)
-    # prettyLabels("cs", "U [V]", 14, r"U$_{ocp,an}$")
-    ## um = uocp_a_fun_mod(cs,np.float64(30))
-    ## plt.plot(cs,u,'o',markerfacecolor='none')
-    ## plt.plot(cs,um,'x')
-
-    ## UOCP_c
-    # fig = plt.figure()
-    # cs = np.linspace(0, params["cscamax"], 100)
-    # u = params["Uocp_c"](cs, params["cscamax"])
-    # plt.plot(cs, u, color="k", linewidth=3)
-    # prettyLabels("cs", "U [V]", 14, r"U$_{ocp,ca}$")
-
-    ## I0_a
-    # fig = plt.figure()
-    # ce = np.linspace(0, 2 * params["ce0"], 100)
-    # i0 = params["i0_a"](
-    #    params["csanmax"] / 2,
-    #    ce,
-    #    params["T"],
-    #    params["alpha_a"],
-    #    params["csanmax"],
-    #    params["R"],
-    #    np.float64(1.0),
-    # )
-    # plt.plot(ce, np.array(i0), color="k", linewidth=3)
-    # prettyLabels("ce", "i", 14, r"I$_{0,a}$, cmax=csanmax/2")
-
-    ## I0_c
-    # fig = plt.figure()
-    # ce = np.linspace(0, 2 * params["ce0"], 100)
-    # i0 = params["i0_c"](
-    #    params["cscamax"] / 2,
-    #    ce,
-    #    params["T"],
-    #    params["alpha_c"],
-    #    params["cscamax"],
-    #    params["R"],
-    # )
-    # plt.plot(ce, i0, color="k", linewidth=3)
-    # prettyLabels("ce", "i", 14, r"I$_{0,c}$, cmax=csanmax/2")
-
-    ## DS_a
-    # fig = plt.figure()
-    # ds_a = params["D_s_a"](params["T"], params["R"])
-    # plt.plot(np.ones(100) * ds_a, color="k", linewidth=3)
-    # prettyLabels("", "Ds", 14, r"D$_{s,a}$")
-
-    ## DS_C
-    # fig = plt.figure()
-    # cs = np.linspace(0, params["cscamax"], 100)
-    # params["D_s_c"] = ds_c_fun_plot_simp
-    # ds = params["D_s_c"](cs, params["T"], params["R"], params["cscamax"])
-    # plt.plot(cs, ds, color="k", linewidth=3)
-    # prettyLabels("cs", "Ds", 14, r"D$_{s,c}$")
 
     plt.show()

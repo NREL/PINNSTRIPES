@@ -34,7 +34,6 @@ def getLossesFolder(rootFolder, prefix="LogFin"):
     for i, entry in reversed(list(enumerate(loss_tmp))):
         if not entry.startswith(prefix):
             a = loss_tmp.pop(i)
-            # print('removed ', a)
     return loss_tmp
 
 

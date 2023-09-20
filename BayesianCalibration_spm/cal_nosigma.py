@@ -142,18 +142,12 @@ def forward(p):
 size_inpt = params["n_params"]
 p = np.random.normal(size=(size_inpt,)).astype(np.float64)
 
-# TF -> JAX, jax_params are the network parameters of the MLP
 jax_func, jax_params = tf2jax.convert(forward, np.zeros_like(p))
 
 jax_forw = jax.jit(jax_func)
 
-## Call JAX, also return updated jax_params (e.g. variable, batchnorm stats)
-# jax_outputs, _ = jax_func(jax_params, np.array([np.float64(2.0), np.float64(2.0)]))
-
 num_warmup = 10000
 num_samples = 4000
-# num_warmup = 60000
-# num_samples = 10000
 max_sigma = max(min_sigma * 1.1, 0.01)
 
 
@@ -228,7 +222,6 @@ def mcmc_iter(y_err=0.1, mcmc_method="HMC"):
         realization.append(y)
     realization = np.array(realization)
 
-    # mean_real = np.mean(realization, axis=0)
     min_real = np.min(realization, axis=0)
     max_real = np.max(realization, axis=0)
 
@@ -356,9 +349,6 @@ min_real = np.min(realization, axis=0)
 max_real = np.max(realization, axis=0)
 std90_real = np.percentile(realization, 90, axis=0)
 std10_real = np.percentile(realization, 10, axis=0)
-
-# if np.amin(data_phis_c - min_real) < 0 or np.amax(data_phis_c - max_real) > 0:
-#    print(f" Increase STD  {np.amin(data_phis_c - std10_real)} - {np.amax(data_phis_c - std90_real)}")
 
 fig = plt.figure()
 plt.plot(data_t, data_phis_c, "o", color="r", markersize=7, label="Data")

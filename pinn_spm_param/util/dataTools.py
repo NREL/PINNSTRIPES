@@ -49,10 +49,6 @@ def checkDataShape(xData, x_params_data, yData):
         print("Expected tensor of rank 2 for yData")
         print("yData shape =", yData.shape)
         sys.exit()
-    # if not (xData.shape[1]==self.ndim):
-    #     print('Expected xData.shape[1] =',ndim)
-    #     print('xData shape =',xData.shape)
-    #     sys.exit()
 
 
 def check_loss_component_dim(terms, string):

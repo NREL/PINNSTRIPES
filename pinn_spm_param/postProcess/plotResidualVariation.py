@@ -597,22 +597,8 @@ def plot_res_var(args):
         except:
             print("Could not save residual proportion figure")
 
-    # plotProportion(stepsBound,residualsBound,residualsBoundProportion,ResBoundName,title='Boundary Losses')
-    # plt.savefig(os.path.join(figureFolder,'resBound_prop_') + logFolderFig + '.png')
-    # plotConvergence_rescaledInit(stepsBound,residualsBound,ResBoundName,title='Boundary Losses')
-    # plt.savefig(os.path.join(figureFolder,'resBound_rescInit_') + logFolderFig + '.png')
-    # plotProportion(stepsInt,residualsInt,residualsIntProportion,ResIntName,title='Interior Losses')
-    # plt.savefig(os.path.join(figureFolder,'resInt_prop_') + logFolderFig + '.png')
-    # plotConvergence_rescaledInit(stepsInt,residualsInt,ResIntName,title='Interior Losses')
-    # plt.savefig(os.path.join(figureFolder,'resInt_rescInit_') + logFolderFig + '.png')
-    # plotProportion(stepsData,residualsData,residualsDataProportion,ResDataName,title='Data losses')
-    # plt.savefig(os.path.join(figureFolder,'resData_prop_') + logFolderFig + '.png')
-    # plotConvergence_rescaledInit(stepsData,residualsData,ResDataName,title='Data Losses')
-    # plt.savefig(os.path.join(figureFolder,'resData_rescInit_') + logFolderFig + '.png')
-
     fig = plt.figure()
     if DYNAMIC_ATTENTION:
-        # plt.plot(globMSELoss[:,0],globMSELoss[:,1],linewidth=3, color='k')
         plt.plot(
             globMSELoss[:, 0],
             globMSELoss[:, 2],
@@ -645,7 +631,6 @@ def plot_res_var(args):
 
     fig = plt.figure()
     if DYNAMIC_ATTENTION:
-        # plt.plot(globMSELoss[:,0],globMSELoss[:,1],linewidth=3, color='k')
         plt.plot(
             globMSELoss[:, 1],
             globMSELoss[:, 2],

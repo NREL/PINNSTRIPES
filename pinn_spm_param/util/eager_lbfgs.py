@@ -164,9 +164,7 @@ def lbfgs(
         nIter = nIter + 1
         state.nIter = state.nIter + 1
 
-        ############################################################
         ## compute gradient descent direction
-        ############################################################
         if state.nIter == 1:
             d = -g
             old_dirs = []
@@ -223,9 +221,7 @@ def lbfgs(
         f_old = f
         x_old = x
 
-        ############################################################
         ## compute step length
-        ############################################################
         # directional derivative
         gtd = dot(g, d)
 
@@ -324,9 +320,7 @@ def lbfgs(
         currentFuncEval = currentFuncEval + lsFuncEval
         state.funcEval = state.funcEval + lsFuncEval
 
-        ############################################################
         ## check conditions
-        ############################################################
         if nIter == maxIter:
             break
 
@@ -350,14 +344,6 @@ def lbfgs(
             # step size below tolX
             print("training appears stuck")
             break
-
-        # if tf.abs(f, f_old) < tolX:
-        #     # function value changing less than tolX
-        #     print(
-        #         "function value changing less than tolX"
-        #         + str(tf.abs(f - f_old))
-        #     )
-        #     break
 
         if do_verbose:
             # Log the loss

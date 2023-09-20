@@ -54,7 +54,7 @@ data_list = args.data_list
 
 n_data = len(data_list)
 
-# load data, from Raissi et. al
+# load data
 multi_data = [
     np.load(os.path.join(dataFolder, data_file)) for data_file in data_list
 ]

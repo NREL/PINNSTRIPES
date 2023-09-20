@@ -162,8 +162,6 @@ def plot_pinn_result(args):
         [r"$[kmol/m^3]$", r"$[kmol/m^3]$"],
         [r"$c_{s,an}$", r"$c_{s,ca}$"],
         ["r [m]", "r [m]"],
-        # vminList=[17, 19],
-        # vmaxList=[27, 43],
     )
     if not args.verbose:
         plt.savefig(

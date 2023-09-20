@@ -84,9 +84,6 @@ def corr_plot(args):
         os.makedirs(figureFolder, exist_ok=True)
         os.makedirs(os.path.join(figureFolder, modelFolderFig), exist_ok=True)
 
-    # print(yTest_cs_c-cs_c_rescaled)
-    # print(np.mean(abs(yTest_cs_c-cs_c_rescaled)))
-    # stop
 
     yTest_phie = data_dict["phie"]
     yTest_phis_c = data_dict["phis_c"]

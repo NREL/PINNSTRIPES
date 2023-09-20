@@ -182,8 +182,6 @@ for comb in list(combs):
         elif comb[ipar] == 1:
             par_list.append(params["deg_" + name + "_max"])
     plt.plot(data_t, forwardModel(par_list, data_t), "--", color="k")
-# plt.plot(data_t, forwardModel(list(deg_params_obs), data_t), linewidth=3, color="r")
-# plt.plot(data_t, data_phis_c, color="r", linewidth=3)
 prettyLabels("time [s]", r"$\phi_{s,+}$ [V]", 14, title="all pred")
 plt.savefig(os.path.join(figureFolder, "bounding.png"))
 plt.close()

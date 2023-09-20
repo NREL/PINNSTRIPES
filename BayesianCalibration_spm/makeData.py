@@ -38,7 +38,6 @@ sys.path.append(args.utilFolder)
 import argument
 import numpy as np
 
-# from forwardPass import from_param_list_to_dict, from_param_list_to_str
 from forwardPass import from_param_list_to_str
 from plotsUtil import *
 from plotsUtil_batt import *
@@ -65,7 +64,6 @@ if not args_spm.params_list is None:
 else:
     sys.exit("ERROR: param list is mandatory here")
 
-# deg_dict = from_param_list_to_dict(params_list, params)
 deg_dict = {"i0_a": params_list[0], "ds_c": params_list[1]}
 print("INFO: DEG PARAM = ", deg_dict)
 

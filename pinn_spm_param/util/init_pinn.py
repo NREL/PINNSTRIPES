@@ -73,7 +73,6 @@ def initialize_params_from_inpt(inpt):
     RATIO_T_MIN = float(inpt["RATIO_T_MIN"])
     EXP_LIMITER = float(inpt["EXP_LIMITER"])
     COLLOCATION_MODE = inpt["COLLOCATION_MODE"]
-    # COLLOCATION_MODE = "random"
     GRADUAL_TIME_SGD = inpt["GRADUAL_TIME_SGD"] == "True"
     GRADUAL_TIME_LBFGS = inpt["GRADUAL_TIME_LBFGS"] == "True"
     FIRST_TIME_LBFGS = None
@@ -534,47 +533,6 @@ def initialize_nn(args, input_params):
     if not LOAD_MODEL is None:
         print("INFO: Loading model %s" % LOAD_MODEL)
         nn = safe_load(nn, LOAD_MODEL)
-
-    # if nn.activeInt:
-    #    sa_int_weights = np.load(
-    #        "Model.save/sa_int_weights.npy", allow_pickle=True
-    #    )
-    #    t_int_col = np.load("Model.save/t_int_col.npy")
-    #    r_a_int_col = np.load("Model.save/r_a_int_col.npy")
-    #    r_c_int_col = np.load("Model.save/r_c_int_col.npy")
-    #    r_maxa_int_col = np.load("Model.save/r_maxa_int_col.npy")
-    #    r_maxc_int_col = np.load("Model.save/r_maxc_int_col.npy")
-    # if nn.activeBound:
-    #    sa_bound_weights = np.load(
-    #        "Model.save/sa_bound_weights.npy", allow_pickle=True
-    #    )
-    #    t_bound_col = np.load("Model.save/t_bound_col.npy")
-    #    r_min_bound_col = np.load("Model.save/r_min_bound_col.npy")
-    #    r_maxa_bound_col = np.load("Model.save/r_maxa_bound_col.npy")
-    #    r_maxc_bound_col = np.load("Model.save/r_maxc_bound_col.npy")
-    # if nn.activeData:
-    #    sa_data_weights = np.load(
-    #        "Model.save/sa_data_weights.npy", allow_pickle=True
-    #    )
-    # if nn.activeReg:
-    #    sa_reg_weights = np.load(
-    #        "Model.save/sa_reg_weights.npy", allow_pickle=True
-    #    )
-    #    t_reg_col = np.load("Model.save/t_reg_col.npy")
-    #
-    # nn.loadCol(
-    #    t_int_col,
-    #    r_a_int_col,
-    #    r_c_int_col,
-    #    r_maxa_int_col,
-    #    r_maxc_int_col,
-    #    sa_int_weights,
-    #    t_bound_col,
-    #    r_min_bound_col,
-    #    r_maxa_bound_col,
-    #    r_maxc_bound_col,
-    #    sa_bound_weights,
-    # )
 
     return nn
 

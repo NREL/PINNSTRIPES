@@ -6,7 +6,6 @@ import time
 import argument
 import numpy as np
 
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 from _losses import (
     loss_fn,
@@ -202,7 +201,6 @@ class myNN(Model):
         verbose=False,
         weights=None,
     ):
-        # super(myNN, self).__init__()
         Model.__init__(self)
 
         self.verbose = verbose
@@ -319,9 +317,7 @@ class myNN(Model):
         self.alpha_unweighted = [np.float64(1.0) for alphaEntry in alpha]
         if self.annealingWeights:
             self.alpha = [np.float64(1.0) for alphaEntry in alpha]
-        # self.phie0 = self.params["phie0"]
         self.phis_a0 = np.float64(0.0)
-        # self.phis_c0 = self.params["phis_c0"]
         self.ce_0 = self.params["ce0"]
         self.cs_a0 = self.params["cs_a0"]
         self.cs_c0 = self.params["cs_c0"]
@@ -373,7 +369,7 @@ class myNN(Model):
                 )
             )
 
-        self.reg = 0  # 1e-3
+        self.reg = 0
         self.n_batch = max(n_batch, 1)
         self.initialLossThreshold = initialLossThreshold
 
@@ -1534,7 +1530,6 @@ class myNN(Model):
     def get_weights(self, model):
         w = []
         for ilayer, layer in enumerate(model.layers[0:]):
-            # print("layer ", ilayer)
             weights_biases = layer.get_weights()
             if len(weights_biases) == 0:
                 pass
@@ -2646,9 +2641,6 @@ class myNN(Model):
                                     reg_ref = True
                                 self.annealingMaxSet = True
                             maxGradRef = allmax[max_grad_id]
-                            # tf.print(maxGradRef)
-                            # tf.print(mean_grads_int[2])
-                            # breakpoint()
                             for i in range(len(self.interiorTerms_rescale)):
                                 if int_ref and i == max_grad_int_id:
                                     continue
@@ -2700,10 +2692,6 @@ class myNN(Model):
                                     a_max=np.float64(1e6),
                                 )
 
-                            # tf.print("int weight = ", self.int_loss_weights)
-                            # tf.print(
-                            #    "bound weight = ", self.bound_loss_weights
-                            # )
 
                     else:
                         time_s = time.time()
@@ -3326,7 +3314,6 @@ class myNN(Model):
             prefix_warning = (
                 "WARNING: LT has changed but could not be updated. Using LT"
             )
-        # if (self.total_step % self.freq) == 0 and has_changed:
         if has_changed:
             param_old = param
             try:
@@ -3659,7 +3646,6 @@ class myNN(Model):
                 os.path.join(self.modelFolder, "best.h5"),
                 overwrite=True,
             )
-            # tf.print("SAVING")
         return bestLoss
 
     def logLosses(

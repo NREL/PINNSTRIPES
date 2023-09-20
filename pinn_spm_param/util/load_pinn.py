@@ -11,7 +11,6 @@ args = argument.initArg()
 
 def reload(utilFolder, localUtilFolder, params_loaded, checkRescale=False):
     # Reload correct modules
-    print("####\t" + str(localUtilFolder))
     _losses = SourceFileLoader(
         "_losses", os.path.join(localUtilFolder, "_losses.py")
     ).load_module()
