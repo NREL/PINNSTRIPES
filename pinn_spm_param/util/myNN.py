@@ -5,7 +5,6 @@ import time
 
 import argument
 import numpy as np
-
 import tensorflow as tf
 from _losses import (
     loss_fn,
@@ -2691,7 +2690,6 @@ class myNN(Model):
                                     a_min=np.float64(1e-1),
                                     a_max=np.float64(1e6),
                                 )
-
 
                     else:
                         time_s = time.time()

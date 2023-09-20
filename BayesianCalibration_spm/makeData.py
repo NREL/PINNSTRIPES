@@ -37,7 +37,6 @@ sys.path.append(args.utilFolder)
 
 import argument
 import numpy as np
-
 from forwardPass import from_param_list_to_str
 from plotsUtil import *
 from plotsUtil_batt import *

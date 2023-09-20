@@ -84,7 +84,6 @@ def corr_plot(args):
         os.makedirs(figureFolder, exist_ok=True)
         os.makedirs(os.path.join(figureFolder, modelFolderFig), exist_ok=True)
 
-
     yTest_phie = data_dict["phie"]
     yTest_phis_c = data_dict["phis_c"]
     yTest_cs_a = data_dict["cs_a"]

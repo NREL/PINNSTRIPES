@@ -1131,7 +1131,6 @@ def setResidualRescaling(self, weights):
         self.boundaryTerms_rescale = [np.float64(0.0)]
         self.boundaryTerms_rescale_unweighted = [np.float64(0.0)]
 
-
     # Data Residuals
     self.n_data_terms = 4
     if self.activeData:
