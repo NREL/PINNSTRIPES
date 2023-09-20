@@ -62,8 +62,6 @@ def flexible_activation(x, activation):
         out = Activation(activation="selu")(x)
     elif activation == "gelu":
         out = tf.keras.activations.gelu(x, approximate=True)
-    elif activation == "large_tanh":
-        out = Activation(large_tanh_activation)(x)
     return out
 
 
@@ -289,8 +287,6 @@ class myNN(Model):
             self.activation = "selu"
         elif activation.lower() == "gelu":
             self.activation = "gelu"
-        elif activation.lower() == "large_tanh":
-            self.activation = "large_tanh"
         else:
             sys.exit("ABORTING: Activation %s unrecognized" % activation)
         self.tmin = np.float64(self.params["tmin"])
