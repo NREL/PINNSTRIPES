@@ -47,7 +47,7 @@ The training occurs in two stages. First, we use SGD training, and next LBFGS tr
 
 `LBFGS` can be deactivated by setting `EPOCHS_LBFGS: 0` or by setting `LBFGS: False` in `pinn_spm_param/input`
 
-### PINN Losses
+### PINN losses
 
 We use 4 different PINN losses
 
@@ -59,7 +59,7 @@ In the SPM case, no regularization is used.
 
 The user may activate or deactivate each loss via the `alpha` parameter in `main.py`. The active or inactive losses are printed at the beginning of training.
 
-### PINN Losses weighting
+### PINN losses weighting
 
 The 4 PINN losses can be independently weighted via `alpha : 1.0 1.0 0.0 0.0`. In order, these coefficients weigh the interior loss, the boundary loss, the data loss, and the regularization loss.
 
