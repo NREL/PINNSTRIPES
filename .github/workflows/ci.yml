@@ -3,8 +3,16 @@ name: PINNSTRIPES-CI
 on:
    push:
      branches: [main]
+     paths-ignore:
+        - '*.md'
+        - 'README*'
+        - 'LICENSE'
    pull_request:
      branches: [main]
+     paths-ignore:
+        - '*.md'
+        - 'README*'
+        - 'LICENSE'
 
 jobs:
   Lint:
