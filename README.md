@@ -75,7 +75,7 @@ The LBFGS learning rate can be set with `LEARNING_RATE_LBFGS`. The learning rate
 
 ### Battery model treatment
 
-#### Hard enforcing of initial conditions
+#### Strict enforcement of initial conditions
 
 Initial conditions are strictly enforced. The rate at which we allow the neural net to deviate from the IC is given by `HARD_IC_TIMESCALE`. 
 
