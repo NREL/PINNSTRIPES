@@ -159,6 +159,9 @@ Code formatting and import sorting are done automatically with `black` and `isor
 
 Fix imports and format : `bash fixFormat.sh`
 
+## Acknowledgements
+This work was authored by the National Renewable Energy Laboratory (NREL), operated by Alliance for Sustainable Energy, LLC, for the U.S. Department of Energy (DOE) under Contract No. DE-AC36-08GO28308. This work was supported by funding from DOE's Vehicle Technologies Office (VTO) and Advanced Scientific Computing Research (ASCR) program. The research was performed using computational resources sponsored by the Department of Energy's Office of Energy Efficiency and Renewable Energy and located at the National Renewable Energy Laboratory. The views expressed in the repository do not necessarily represent the views of the DOE or the U.S. Government.
+
 ## References
 
 SWR-22-12
