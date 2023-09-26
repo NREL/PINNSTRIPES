@@ -238,7 +238,7 @@ def phis_c0_fun(i0_a, j_a, F, R, T, Uocp_a0, j_c, i0_c, Uocp_c0):
     return j_c * (F / i0_c) * (R * T / F) + Uocp_c0 + phie0
 
 
-def setParams(params, deg, bat, an, sep, ca, ic):
+def setParams(params, deg, bat, an, ca, ic):
     # Parametric domain
     params["deg_i0_a_min"] = deg.bounds[deg.ind_i0_a][0]
     params["deg_i0_a_max"] = deg.bounds[deg.ind_i0_a][1]
