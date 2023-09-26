@@ -47,9 +47,6 @@ def makeParams():
             self.alpha = np.float64(0.5)
             self.D50 = np.float64(8e-6)
             self.csmax = np.float64(30.53)
-            self.de = de_fun
-            self.ke = ke_fun
-            self.sigma = sigma_a_fun
             self.uocp = uocp_a_fun
             self.dlnfdce = dlnf_dce_fun
             self.i0 = i0_a_degradation_param_fun
@@ -76,10 +73,6 @@ def makeParams():
             self.pe = np.float64(2.0)
             self.alpha = np.float64(0.5)
             self.el = self.Separator_el()
-            self.de = de_fun
-            self.ke = ke_fun
-            self.dlnfdce = dlnf_dce_fun
-            self.t0 = t0_fun
 
         class Separator_el:
             def __init__(self):
@@ -95,14 +88,9 @@ def makeParams():
             self.alpha = np.float64(0.5)
             self.D50 = np.float64(3.6e-6)
             self.csmax = np.float64(49.6)
-            self.de = de_fun
-            self.ke = ke_fun
-            self.sigma = sigma_c_fun
             self.uocp = uocp_c_fun
-            self.dlnfdce = dlnf_dce_fun
             self.i0 = i0_c_fun
             self.ds = ds_c_degradation_param_fun
-            self.t0 = t0_fun
 
         class Cathode_el:
             def __init__(self):
