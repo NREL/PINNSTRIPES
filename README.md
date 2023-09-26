@@ -1,4 +1,4 @@
-# PINNSTRIPES (Physics-Informed Neural Network SurrogaTe for Rapidly Identifying Parameters in Energy Systems) [![PINNSTRIPES-CI](https://github.com/NREL/PINNSTRIPES/actions/workflows/ci.yml/badge.svg)](https://github.com/NREL/PINNSTRIPES/actions/workflows/ci.yml)
+# PINNSTRIPES (Physics-Informed Neural Network SurrogaTe for Rapidly Identifying Parameters in Energy Systems) [![PINNSTRIPES-CI](https://github.com/NREL/PINNSTRIPES/actions/workflows/ci.yml/badge.svg)](https://github.com/NREL/PINNSTRIPES/actions/workflows/ci.yml) 
 
 ## Installing
 
@@ -18,7 +18,7 @@ Located in `pinn_spm_param`
 
 3. `pinn_spm_param/postProcess`: post-process the PINN training result. Link the correct model and log folder in `exec.sh` and do `bash exec.sh`
 
-Consider looking at the test suite in `pinn_spm_param/tests` and `.github/workflows/ci.yml` to understand how to use the code
+Consider looking at the test suite in `pinn_spm_param/tests`, `BayesianCalibration_spm/exec_test.sh`, and `.github/workflows/ci.yml` to understand how to use the code
 
 ### Precision
 
@@ -47,7 +47,7 @@ The training occurs in two stages. First, we use SGD training, and next LBFGS tr
 
 `LBFGS` can be deactivated by setting `EPOCHS_LBFGS: 0` or by setting `LBFGS: False` in `pinn_spm_param/input`
 
-### PINN Losses
+### PINN losses
 
 We use 4 different PINN losses
 
@@ -59,7 +59,7 @@ In the SPM case, no regularization is used.
 
 The user may activate or deactivate each loss via the `alpha` parameter in `main.py`. The active or inactive losses are printed at the beginning of training.
 
-### PINN Losses weighting
+### PINN losses weighting
 
 The 4 PINN losses can be independently weighted via `alpha : 1.0 1.0 0.0 0.0`. In order, these coefficients weigh the interior loss, the boundary loss, the data loss, and the regularization loss.
 
@@ -75,7 +75,7 @@ The LBFGS learning rate can be set with `LEARNING_RATE_LBFGS`. The learning rate
 
 ### Battery model treatment
 
-#### Hard enforcing of initial conditions
+#### Strict enforcement of initial conditions
 
 Initial conditions are strictly enforced. The rate at which we allow the neural net to deviate from the IC is given by `HARD_IC_TIMESCALE`. 
 
@@ -118,10 +118,29 @@ Two architectures are available. Either a split architecture is used where each 
 Lastly, gradient pathology blocks, residual blocks, or fully connected blocks can be used.
 
 
-
 ### Hierarchy
 
 The models can be used in hierarchical modes by setting `HNN` and `HNNTIME`. Examples are available in `pinn_spm_param/tests`. The hierarchy can be done by training models over the same spatio-temporal and parametric domain. It can be done by training lower hierarchy levels up until a threshold time. It can be done by training the lower hierarchy levels for a specific parameter set.
+
+## SPM Preprocess
+
+Under `pinn_spm_param/integration_spm` an implicit and an explicit integrator are provided to generate solutions of the SPM equations. 
+
+Under `pinn_spm_param/integration_spm`, run `python main.py -nosimp -opt -lean` to generate a rapid example of the SPM solution.
+
+Under `pinn_spm_param/preProcess`, run `python makeDataset_spm.py -nosimp -df ../integration_spm -frt 1` to generate a dataset usable by the PINN.
+
+The implicit integration is recommended for fine spatial discretization due to the diffusive CFL constraint. For rapid integration using a coarse grid, the explicit integration will be preferable. The explicit integrator automatically adjusts the timestep based on the CFL constraint.
+
+## SPM post process
+
+Under `pinn_spm_param/postProcess` see `exec.sh` for all the post-processing tools available.
+
+- `plotData.py` will plot the data generated from the PDE integrator
+- `plotCorrelationPINNvsData.py` will show 45 degree plots to check the accuracy of the PINN againsts the PDE integrator
+- `plotPINNResult.py` will plot the fields predicted by the best PINN
+- `plotPINNResult_movie.py` will plot the field predicted by the best PINN and the correlation plots as movies to check the evolution of the predictions over epochs.
+- `plotResidualVariation.py` will display the different losses to ensure that they are properly balanced.
 
 
 ## Bayesian calibration
@@ -134,13 +153,14 @@ The calibration can be done via `cal_nosigma.py` (see `BayesianCalibration_spm/e
 
 The likelihood uncertainty `sigma` is set via bisectional hyperparameter search.
 
-## Formatting
+## Formatting [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 
-Code formatting and import sorting are done automatically with `black` and `isort`.
+Code formatting and import sorting are done automatically with `black` and `isort`. 
 
 Fix imports and format : `bash fixFormat.sh`
 
-Pushes and PR to the `main` branch are forbidden without first running these commands
+## Acknowledgements
+This work was authored by the National Renewable Energy Laboratory (NREL), operated by Alliance for Sustainable Energy, LLC, for the U.S. Department of Energy (DOE) under Contract No. DE-AC36-08GO28308. This work was supported by funding from DOE's Vehicle Technologies Office (VTO) and Advanced Scientific Computing Research (ASCR) program. The research was performed using computational resources sponsored by the Department of Energy's Office of Energy Efficiency and Renewable Energy and located at the National Renewable Energy Laboratory. The views expressed in the repository do not necessarily represent the views of the DOE or the U.S. Government.
 
 ## References
 
@@ -151,18 +171,17 @@ Recommended citations
 
 ```
 
-@article{j1,
-  title={},
-  author={},
+@article{hassanaly2023Physics1,
+  title={Physics-informed neural network surrogates of Li-ion battery models for
+parametric inference. \\Part I: Implementation and multifidelity hierarchies for the single-particle model},
+  author={Malik Hassanaly, Peter J. Weddle, Ryan N. King, Subhayan De, Alireza Doostan, Kandler Smith},
   year={2023},
-  institution={}
 }
 
-@article{j2,
-  title={},
-  author={},
+@article{hassanaly2023Physics2,
+  title={Physics-informed neural network surrogates of Li-ion battery models for parametric inference. \\Part II: Regularization and application of the pseudo-2D model},
+  author={Malik Hassanaly, Peter J. Weddle, Ryan N. King, Subhayan De, Alireza Doostan, Kandler Smith},
   year={2023},
-  institution={}
 }
 
 ```
