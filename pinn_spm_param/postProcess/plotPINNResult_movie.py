@@ -137,6 +137,7 @@ def makePlot(movieDir, solDict, params_list, indMov, stepID, data_dict=None):
     plt.savefig(
         os.path.join(figureFolder, f"cs2D{string_params}_{indMov}.png")
     )
+    plt.close()
 
     # PHI
     file_path_name = os.path.join(
