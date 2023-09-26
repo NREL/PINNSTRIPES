@@ -40,102 +40,43 @@ def makeParams():
     class Anode:
         def __init__(self):
             self.thickness = np.float64(44 * 1e-6)
-            self.el = self.Anode_el()
             self.solids = self.Anode_solids()
-            self.CBD = self.Anode_CBD()
             self.A = np.float64(1.4e-3)
             self.alpha = np.float64(0.5)
             self.D50 = np.float64(8e-6)
             self.csmax = np.float64(30.53)
-            self.de = de_fun
-            self.ke = ke_fun
-            self.sigma = sigma_a_fun
             self.uocp = uocp_a_fun
-            self.dlnfdce = dlnf_dce_fun
             self.i0 = i0_a_degradation_param_fun
             self.ds = ds_a_fun
-            self.t0 = t0_fun
-
-        class Anode_el:
-            def __init__(self):
-                self.eps = np.float64(0.4)
 
         class Anode_solids:
             def __init__(self):
                 self.eps = np.float64(0.5430727763)
-                self.pe = np.float64(2.0)
-
-        class Anode_CBD:
-            def __init__(self):
-                self.eps = np.float64(0.0569272237)
-
-    class Separator:
-        def __init__(self):
-            self.thickness = np.float64(20 * 1e-6)
-            self.A = np.float64(1.4e-3)
-            self.pe = np.float64(2.0)
-            self.alpha = np.float64(0.5)
-            self.el = self.Separator_el()
-            self.de = de_fun
-            self.ke = ke_fun
-            self.dlnfdce = dlnf_dce_fun
-            self.t0 = t0_fun
-
-        class Separator_el:
-            def __init__(self):
-                self.eps = np.float64(0.4)
 
     class Cathode:
         def __init__(self):
             self.thickness = np.float64(42 * 1e-6)
             self.A = np.float64(1.4e-3)
-            self.el = self.Cathode_el()
             self.solids = self.Cathode_solids()
-            self.CBD = self.Cathode_CBD()
             self.alpha = np.float64(0.5)
             self.D50 = np.float64(3.6e-6)
             self.csmax = np.float64(49.6)
-            self.de = de_fun
-            self.ke = ke_fun
-            self.sigma = sigma_c_fun
             self.uocp = uocp_c_fun
-            self.dlnfdce = dlnf_dce_fun
             self.i0 = i0_c_fun
             self.ds = ds_c_degradation_param_fun
-            self.t0 = t0_fun
-
-        class Cathode_el:
-            def __init__(self):
-                self.eps = np.float64(0.4)
 
         class Cathode_solids:
             def __init__(self):
                 self.eps = np.float64(0.47662)
-                self.pe = np.float64(2.0)
-
-        class Cathode_CBD:
-            def __init__(self):
-                self.eps = np.float64(0.12338)
 
     deg = Degradation()
     bat = Macroscopic()
     an = Anode()
-    sep = Separator()
     ca = Cathode()
-    # Check mass conservation
-    sum_eps_a = an.CBD.eps + an.el.eps + an.solids.eps
-    if abs(np.float64(1.0) - sum_eps_a) > 1e-12:
-        print("ERROR: (1-sum eps_a) = %.5g" % abs(np.float64(1.0) - sum_eps_a))
-        sys.exit("ABORT")
-    sum_eps_c = ca.CBD.eps + ca.el.eps + ca.solids.eps
-    if abs(np.float64(1.0) - sum_eps_c) > 1e-12:
-        print("ERROR: (1-sum eps_c) = %.5g" % abs(np.float64(1.0) - sum_eps_c))
-        sys.exit("ABORT")
 
     class IC:
         def __init__(self):
             self.an = self.Anode_IC()
-            self.sep = self.Separator_IC()
             self.ca = self.Cathode_IC(self.an.cs)
             self.ce = np.float64(1.2)
             self.phie = -an.uocp(self.an.cs, an.csmax)
@@ -149,10 +90,6 @@ def makeParams():
                 self.cs = np.float64(0.91 * an.csmax)
                 self.phis = np.float64(0.0)
 
-        class Separator_IC:
-            def __init__(self):
-                self.ce = np.float64(1.2)
-
         class Cathode_IC:
             def __init__(self, cs_a0):
                 self.ce = np.float64(1.2)
@@ -165,7 +102,7 @@ def makeParams():
 
     params = {}
 
-    params = setParams(params, deg, bat, an, sep, ca, ic)
+    params = setParams(params, deg, bat, an, ca, ic)
 
     return params
 

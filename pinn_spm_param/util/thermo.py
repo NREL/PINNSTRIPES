@@ -229,116 +229,6 @@ def ds_c_fun_simp_degradation_param(cs_c, T, R, cscamax, degradation_param):
     )
 
 
-def sigma_c_fun(eps_s_c, eps_cbd_c):
-    return np.float64(10.0) * (eps_s_c + eps_cbd_c)
-
-
-def sigma_a_fun(eps_s_a, eps_cbd_a):
-    return np.float64(10.0) * (eps_s_a + eps_cbd_a)
-
-
-def de_fun(ce, T):
-    power = (
-        -np.float64(0.5688226)
-        - np.float64(1607.003)
-        / (T - (-np.float64(24.83763) + np.float64(64.07366) * ce))
-        + (
-            -np.float64(0.8108721)
-            + np.float64(475.291)
-            / (T - (-np.float64(24.83763) + np.float64(64.07366) * ce))
-        )
-        * ce
-        + (
-            -np.float64(0.005192312)
-            - np.float64(33.43827)
-            / (T - (-np.float64(24.83763) + np.float64(64.07366) * ce))
-        )
-        * ce
-        * ce
-    )
-    return np.float64(0.0001) * tf.math.pow(np.float64(10.0), power)
-
-
-def de_fun_simp(ce, T):
-    return np.float64(1.8e-10) * np.ones(ce.shape, dtype="float64")
-
-
-def ke_fun(ce, T):
-    return ce * (
-        (
-            np.float64(0.0001909446) * T**2
-            - np.float64(0.08038545) * T
-            + np.float64(9.00341)
-        )
-        + ce
-        * (
-            -np.float64(0.00000002887587) * T**4
-            + np.float64(0.00003483638) * T**3
-            - np.float64(0.01583677) * T**2
-            + np.float64(3.195295) * T
-            - np.float64(241.4638)
-        )
-        + ce**2
-        * (
-            np.float64(0.00000001653786) * T**4
-            - np.float64(0.0000199876) * T**3
-            + np.float64(0.009071155) * T**2
-            - np.float64(1.828064) * T
-            + np.float64(138.0976)
-        )
-        + ce**3
-        * (
-            -np.float64(0.000000002791965) * T**4
-            + np.float64(0.000003377143) * T**3
-            - np.float64(0.001532707) * T**2
-            + np.float64(0.3090003) * T
-            - np.float64(23.35671)
-        )
-    )
-
-
-def ke_fun_simp(ce, T):
-    return np.float64(0.6) * np.ones(ce.shape, dtype="float64")
-
-
-def dlnf_dce_fun(ce, T):
-    return (
-        np.float64(0.54) * ce**2 * tf.exp(np.float64(329.0) / T)
-        - np.float64(0.00225) * ce * tf.exp(np.float64(1360.0) / T)
-        + np.float64(0.341) * tf.exp(np.float64(261.0) / T)
-    )
-
-
-def dlnf_dce_fun_simp(ce, T):
-    return np.float64(8.0) * np.ones(ce.shape, dtype="float64")
-
-
-def t0_fun(ce, T):
-    return (
-        (
-            np.float64(-0.0000002876102) * T**2
-            + np.float64(0.0002077407) * T
-            - np.float64(0.03881203)
-        )
-        * ce**2
-        + (
-            np.float64(0.000001161463) * T**2
-            - np.float64(0.00086825) * T
-            + np.float64(0.1777266)
-        )
-        * ce
-        + (
-            -np.float64(0.0000006766258) * T**2
-            + np.float64(0.0006389189) * T
-            + np.float64(0.3091761)
-        )
-    )
-
-
-def t0_fun_simp(ce, T):
-    return np.float64(0.46) * np.ones(ce.shape, dtype="float64")
-
-
 def phie0_fun(i0_a, j_a, F, R, T, Uocp_a0):
     return -j_a * (F / i0_a) * (R * T / F) - Uocp_a0
 
@@ -348,7 +238,7 @@ def phis_c0_fun(i0_a, j_a, F, R, T, Uocp_a0, j_c, i0_c, Uocp_c0):
     return j_c * (F / i0_c) * (R * T / F) + Uocp_c0 + phie0
 
 
-def setParams(params, deg, bat, an, sep, ca, ic):
+def setParams(params, deg, bat, an, ca, ic):
     # Parametric domain
     params["deg_i0_a_min"] = deg.bounds[deg.ind_i0_a][0]
     params["deg_i0_a_max"] = deg.bounds[deg.ind_i0_a][1]
