@@ -23,8 +23,8 @@ do
     file="${fileArray[$i]}"
     if ! `list_include_item "$fileArrayToLeave" "${fileArray[$i]}"` ; then
       echo $file
-      sed -i.bu 's/float32/float64/g' $file
-      rm $file.bu
+      sed -i.backup 's/float32/float64/g' $file
+      rm $file.backup
     fi
 done
 

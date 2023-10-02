@@ -33,11 +33,14 @@ jobs:
         run: pip install black
       - name: Install isort
         run: pip install isort
+      - name: Install codespell
+        run: pip install codespell
       - name: Formatting and sorting import
         run: |
           source .github/linters/formatting.sh
           format pinn_spm_param true
           format BayesianCalibration_spm true
+          codespell
   Test:
     runs-on: ubuntu-latest
     strategy:
@@ -73,6 +76,7 @@ jobs:
           python test_spm_postProc.py -m pytest
       - name: Test SPM utils
         run: |
+          pip install black
           cd pinn_spm_param/tests
           python test_spm_utils.py -m pytest
       - name: Test SPM Bayesian calibration
