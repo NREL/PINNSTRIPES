@@ -127,7 +127,9 @@ def loss_fn_lbfgs_annealing(
     # Data loss
     data_loss = np.float64(0.0)
     for i_term, term in enumerate(dataTerms):
-        data_loss += data_loss_weights[i_term] * tf.reduce_mean(tf.square(term))
+        data_loss += data_loss_weights[i_term] * tf.reduce_mean(
+            tf.square(term)
+        )
 
     # Reg loss
     reg_loss = np.float64(0.0)
@@ -256,7 +258,9 @@ def loss_fn_annealing(
     data_loss = np.float64(0.0)
     for i_term, term in enumerate(dataTerms):
         data_loss_terms[i_term] = tf.reduce_mean(tf.square(term))
-        data_loss += data_loss_weights[i_term] * tf.reduce_mean(tf.square(term))
+        data_loss += data_loss_weights[i_term] * tf.reduce_mean(
+            tf.square(term)
+        )
 
     # Regularization loss
     reg_loss = np.float64(0.0)
