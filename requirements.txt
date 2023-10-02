@@ -1,9 +1,6 @@
 tensorflow
 imageio
 matplotlib
-codespell
-black
-isort
 pandas<2.0
 parameter-sherpa
 corner

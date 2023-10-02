@@ -40,6 +40,7 @@ jobs:
           source .github/linters/formatting.sh
           format pinn_spm_param true
           format BayesianCalibration_spm true
+          codespell
   Test:
     runs-on: ubuntu-latest
     strategy:
