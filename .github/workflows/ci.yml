@@ -76,6 +76,7 @@ jobs:
           python test_spm_postProc.py -m pytest
       - name: Test SPM utils
         run: |
+          pip install black
           cd pinn_spm_param/tests
           python test_spm_utils.py -m pytest
       - name: Test SPM Bayesian calibration
