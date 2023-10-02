@@ -25,8 +25,8 @@ do
     file="${fileArray[$i]}"
     if ! `list_include_item "$fileArrayToLeave" "${fileArray[$i]}"` ; then
       echo $file
-      sed -i.bu 's/\-nosimp/\-simp/g' $file
-      rm $file.bu
+      sed -i.backup 's/\-nosimp/\-simp/g' $file
+      rm $file.backup
     fi
 done
 

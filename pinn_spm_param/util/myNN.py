@@ -639,7 +639,7 @@ class myNN(Model):
                     % (100 * self.new_nData / ndata_orig)
                 )
                 print(
-                    "Adjust N_BATCH and MAX_BATCH_SIZE_DATA to accomodate %d datapoints"
+                    "Adjust N_BATCH and MAX_BATCH_SIZE_DATA to accommodate %d datapoints"
                     % ndata_orig
                 )
         else:

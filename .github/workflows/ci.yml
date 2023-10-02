@@ -33,6 +33,8 @@ jobs:
         run: pip install black
       - name: Install isort
         run: pip install isort
+      - name: Install codespell
+        run: pip install codespell
       - name: Formatting and sorting import
         run: |
           source .github/linters/formatting.sh

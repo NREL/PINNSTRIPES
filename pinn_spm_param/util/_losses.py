@@ -27,25 +27,25 @@ def loss_fn_lbfgs_SA(
 ):
     # Interior loss
     int_loss = np.float64(0.0)
-    for iterm, term in enumerate(interiorTerms):
-        int_loss += tf.reduce_mean(tf.square(int_col_weights[iterm] * term))
+    for i_term, term in enumerate(interiorTerms):
+        int_loss += tf.reduce_mean(tf.square(int_col_weights[i_term] * term))
 
     # Boundary loss
     bound_loss = np.float64(0.0)
-    for iterm, term in enumerate(boundaryTerms):
+    for i_term, term in enumerate(boundaryTerms):
         bound_loss += tf.reduce_mean(
-            tf.square(bound_col_weights[iterm] * term)
+            tf.square(bound_col_weights[i_term] * term)
         )
 
     # Data loss
     data_loss = np.float64(0.0)
-    for iterm, term in enumerate(dataTerms):
-        data_loss += tf.reduce_mean(tf.square(data_col_weights[iterm] * term))
+    for i_term, term in enumerate(dataTerms):
+        data_loss += tf.reduce_mean(tf.square(data_col_weights[i_term] * term))
 
     # Reg loss
     reg_loss = np.float64(0.0)
-    for iterm, term in enumerate(regularizationTerms):
-        reg_loss += tf.reduce_mean(tf.square(reg_col_weights[iterm] * term))
+    for i_term, term in enumerate(regularizationTerms):
+        reg_loss += tf.reduce_mean(tf.square(reg_col_weights[i_term] * term))
 
     global_loss = (
         alpha[0] * int_loss
@@ -67,22 +67,22 @@ def loss_fn_lbfgs(
 ):
     # Interior loss
     int_loss = np.float64(0.0)
-    for iterm, term in enumerate(interiorTerms):
+    for i_term, term in enumerate(interiorTerms):
         int_loss += tf.reduce_mean(tf.square(term))
 
     # Boundary loss
     bound_loss = np.float64(0.0)
-    for iterm, term in enumerate(boundaryTerms):
+    for i_term, term in enumerate(boundaryTerms):
         bound_loss += tf.reduce_mean(tf.square(term))
 
     # Data loss
     data_loss = np.float64(0.0)
-    for iterm, term in enumerate(dataTerms):
+    for i_term, term in enumerate(dataTerms):
         data_loss += tf.reduce_mean(tf.square(term))
 
     # Reg loss
     reg_loss = np.float64(0.0)
-    for iterm, term in enumerate(regularizationTerms):
+    for i_term, term in enumerate(regularizationTerms):
         reg_loss += tf.reduce_mean(tf.square(term))
 
     global_loss = (
@@ -114,25 +114,25 @@ def loss_fn_lbfgs_annealing(
 ):
     # Interior loss
     int_loss = np.float64(0.0)
-    for iterm, term in enumerate(interiorTerms):
-        int_loss += int_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
+    for i_term, term in enumerate(interiorTerms):
+        int_loss += int_loss_weights[i_term] * tf.reduce_mean(tf.square(term))
 
     # Boundary loss
     bound_loss = np.float64(0.0)
-    for iterm, term in enumerate(boundaryTerms):
-        bound_loss += bound_loss_weights[iterm] * tf.reduce_mean(
+    for i_term, term in enumerate(boundaryTerms):
+        bound_loss += bound_loss_weights[i_term] * tf.reduce_mean(
             tf.square(term)
         )
 
     # Data loss
     data_loss = np.float64(0.0)
-    for iterm, term in enumerate(dataTerms):
-        data_loss += data_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
+    for i_term, term in enumerate(dataTerms):
+        data_loss += data_loss_weights[i_term] * tf.reduce_mean(tf.square(term))
 
     # Reg loss
     reg_loss = np.float64(0.0)
-    for iterm, term in enumerate(regularizationTerms):
-        reg_loss += reg_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
+    for i_term, term in enumerate(regularizationTerms):
+        reg_loss += reg_loss_weights[i_term] * tf.reduce_mean(tf.square(term))
 
     global_loss = (
         alpha[0] * int_loss
@@ -240,29 +240,29 @@ def loss_fn_annealing(
 ):
     # Interior loss
     int_loss = np.float64(0.0)
-    for iterm, term in enumerate(interiorTerms):
-        int_loss_terms[iterm] = tf.reduce_mean(tf.square(term))
-        int_loss += int_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
+    for i_term, term in enumerate(interiorTerms):
+        int_loss_terms[i_term] = tf.reduce_mean(tf.square(term))
+        int_loss += int_loss_weights[i_term] * tf.reduce_mean(tf.square(term))
 
     # Boundary loss
     bound_loss = np.float64(0.0)
-    for iterm, term in enumerate(boundaryTerms):
-        bound_loss_terms[iterm] = tf.reduce_mean(tf.square(term))
-        bound_loss += bound_loss_weights[iterm] * tf.reduce_mean(
+    for i_term, term in enumerate(boundaryTerms):
+        bound_loss_terms[i_term] = tf.reduce_mean(tf.square(term))
+        bound_loss += bound_loss_weights[i_term] * tf.reduce_mean(
             tf.square(term)
         )
 
     # Data loss
     data_loss = np.float64(0.0)
-    for iterm, term in enumerate(dataTerms):
-        data_loss_terms[iterm] = tf.reduce_mean(tf.square(term))
-        data_loss += data_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
+    for i_term, term in enumerate(dataTerms):
+        data_loss_terms[i_term] = tf.reduce_mean(tf.square(term))
+        data_loss += data_loss_weights[i_term] * tf.reduce_mean(tf.square(term))
 
     # Regularization loss
     reg_loss = np.float64(0.0)
-    for iterm, term in enumerate(regularizationTerms):
-        reg_loss_terms[iterm] = tf.reduce_mean(tf.square(term))
-        reg_loss += reg_loss_weights[iterm] * tf.reduce_mean(tf.square(term))
+    for i_term, term in enumerate(regularizationTerms):
+        reg_loss_terms[i_term] = tf.reduce_mean(tf.square(term))
+        reg_loss += reg_loss_weights[i_term] * tf.reduce_mean(tf.square(term))
 
     return (
         int_loss + bound_loss + data_loss + reg_loss,
@@ -278,26 +278,26 @@ def loss_fn(
 ):
     # Interior loss
     int_loss = np.float64(0.0)
-    for iterm, term in enumerate(interiorTerms):
+    for i_term, term in enumerate(interiorTerms):
         int_loss += tf.reduce_mean(tf.square(term))
 
     int_loss = int_loss * alpha[0]
 
     # Boundary loss
     bound_loss = np.float64(0.0)
-    for iterm, term in enumerate(boundaryTerms):
+    for i_term, term in enumerate(boundaryTerms):
         bound_loss += tf.reduce_mean(tf.square(term))
     bound_loss = bound_loss * alpha[1]
 
     # Data loss
     data_loss = np.float64(0.0)
-    for iterm, term in enumerate(dataTerms):
+    for i_term, term in enumerate(dataTerms):
         data_loss += tf.reduce_mean(tf.square(term))
     data_loss = data_loss * alpha[2]
 
     # Regularization loss
     reg_loss = np.float64(0.0)
-    for iterm, term in enumerate(regularizationTerms):
+    for i_term, term in enumerate(regularizationTerms):
         reg_loss += tf.reduce_mean(tf.square(term))
     reg_loss = reg_loss * alpha[3]
 
