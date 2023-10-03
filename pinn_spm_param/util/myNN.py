@@ -311,7 +311,12 @@ class myNN(Model):
         self.alpha = [np.float64(alphaEntry) for alphaEntry in alpha]
         self.alpha_unweighted = [np.float64(1.0) for alphaEntry in alpha]
         if self.annealingWeights:
-            self.alpha = [np.float64(1.0) for alphaEntry in alpha]
+            self.alpha = [
+                np.float64(1.0)
+                if np.float64(alphaEntry) > np.float64(1e-12)
+                else np.float64(0.0)
+                for alphaEntry in alpha
+            ]
         self.phis_a0 = np.float64(0.0)
         self.ce_0 = self.params["ce0"]
         self.cs_a0 = self.params["cs_a0"]
