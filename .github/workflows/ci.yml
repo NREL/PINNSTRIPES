@@ -29,12 +29,11 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{matrix.python-version}}
-      - name: Install Black
-        run: pip install black
-      - name: Install isort
-        run: pip install isort
-      - name: Install codespell
-        run: pip install codespell
+      - name: Install formatting dependencies
+        run: |
+          pip install black
+          pip install isort
+          pip install codespell
       - name: Formatting and sorting import
         run: |
           source .github/linters/formatting.sh
