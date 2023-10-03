@@ -173,5 +173,13 @@ def test_hierarchical():
 
 
 if __name__ == "__main__":
+    test_sgd_lbfgs()
+    test_anneal()
+    test_sa()
+    test_random_col()
+    test_split()
+    test_fullNL()
+    test_gradualSGD()
+    test_gradualLBFGS()
     test_hierarchical()
     pass
