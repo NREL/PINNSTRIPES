@@ -1,5 +1,6 @@
 import sys
 
+
 # Adapted from https://stackoverflow.com/questions/3173320/text-progress-bar-in-terminal-with-block-characters/34325723#34325723
 # Print iterations progress
 def printProgressBar(
