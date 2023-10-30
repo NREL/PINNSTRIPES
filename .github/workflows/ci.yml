@@ -83,3 +83,9 @@ jobs:
           cp pinn_spm_param/integration_spm/solution.npz  pinn_spm_param/integration_spm/solution_0.5_1.npz
           cd BayesianCalibration_spm
           bash exec_test.sh
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      
