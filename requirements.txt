@@ -6,3 +6,4 @@ corner
 tf2jax
 numpyro
 black
+scikit-learn
