@@ -2,7 +2,7 @@ tensorflow
 imageio
 matplotlib
 pandas<2.0
-parameter-sherpa
 corner
 tf2jax
 numpyro
+black
