@@ -129,7 +129,7 @@ def plotProportion(
         start, end = roundSteps(steps)
         ax.xaxis.set_ticks(np.linspace(start, end, 3))
     else:
-        pretty_labels(ax, "step", "loss proportion", 14, title=title)
+        pretty_labels("step", "loss proportion", 14, title=title, ax=ax)
         pretty_legend(ax=ax)
         start, end = roundSteps(steps)
         ax.xaxis.set_ticks(np.linspace(start, end, 3))

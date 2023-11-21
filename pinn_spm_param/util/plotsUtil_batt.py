@@ -1,5 +1,12 @@
 import numpy as np
-from prettyPlot.plotsUtil import plt, pretty_labels, pretty_legend
+from prettyPlot.plotsUtil import (
+    cm,
+    make_axes_locatable,
+    matplotlib,
+    plt,
+    pretty_labels,
+    pretty_legend,
+)
 
 
 def line_cs_results(
@@ -57,7 +64,7 @@ def line_cs_results(
             label=f"t = {stamp}s",
         )
 
-    plot_legend()
+    pretty_legend()
     pretty_labels(xlabel, ylabel, 14, title=title)
     if not verbose and file_path_name is not None:
         plt.savefig(file_path_name)
@@ -101,7 +108,7 @@ def line_phi_results(
         label=r"$\phi_{s,c}$",
     )
 
-    plot_legend()
+    pretty_legend()
     pretty_labels(xlabel, ylabel, 14, title=title)
     if not verbose and file_path_name is not None:
         plt.savefig(file_path_name)

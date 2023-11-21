@@ -8,7 +8,6 @@ sys.path.append("../util")
 import argument
 import tensorflow as tf
 from myNN import *
-from plotsUtil import *
 from tensorflow import keras
 from tensorflow.keras import layers, regularizers
 

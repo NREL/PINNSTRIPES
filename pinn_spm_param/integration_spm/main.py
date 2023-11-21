@@ -91,7 +91,7 @@ plt.plot(
     label=r"$c_{surf,s,c}$/$c_{s,ca,max}$",
 )
 pretty_labels("t", "", 14)
-plot_legend()
+pretty_legend()
 
 fig = plt.figure()
 plt.plot(
@@ -125,13 +125,13 @@ for i in range(nLines):
         color=str(i / int(nLines * 1.5)),
     )
 pretty_labels("r/R", "", 14)
-plot_legend()
+pretty_legend()
 
 fig = plt.figure()
 plt.plot(config["t"], sol["phie"], label=r"$\phi_e$")
 plt.plot(config["t"], sol["phis_c"], label=r"$\phi_{s,c}$")
 pretty_labels("t", "", 14)
-plot_legend()
+pretty_legend()
 
 
 # Plot cs

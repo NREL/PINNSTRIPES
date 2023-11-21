@@ -77,7 +77,7 @@ def plot_pde_data(args):
     plt.plot(t, phie, label=r"$\phi_e$")
     plt.plot(t, phis_c, label=r"$\phi_{s,c}$")
     pretty_labels("t", "[V]", 14)
-    plot_legend()
+    pretty_legend()
     if not args.verbose:
         plt.savefig(os.path.join(figureFolder, "PhiData.png"))
 
