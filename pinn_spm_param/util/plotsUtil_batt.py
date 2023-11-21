@@ -1,5 +1,5 @@
 import numpy as np
-from prettyPlot.plotsUtil import pretty_labels, pretty_legend
+from prettyPlot.plotsUtil import plt, pretty_labels, pretty_legend
 
 
 def line_cs_results(

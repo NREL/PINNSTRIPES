@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 import black
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tf_lineInterp as tfli

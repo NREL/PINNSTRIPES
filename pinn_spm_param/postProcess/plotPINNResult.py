@@ -14,7 +14,6 @@ from forwardPass import (
 )
 from init_pinn import initialize_nn_from_params_config, safe_load
 from myNN import *
-from plotsUtil import *
 from plotsUtil_batt import *
 from tensorflow import keras
 from tensorflow.keras import layers, regularizers

@@ -8,7 +8,6 @@ import argument
 import tensorflow as tf
 from myNN import *
 from plotsUtil_batt import *
-from prettyPlot.plotsUtil import pretty_labels, pretty_legend
 from tensorflow import keras
 from tensorflow.keras import layers, regularizers
 
