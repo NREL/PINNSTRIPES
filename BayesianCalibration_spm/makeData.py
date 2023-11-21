@@ -40,8 +40,8 @@ import numpy as np
 
 # from forwardPass import from_param_list_to_dict, from_param_list_to_str
 from forwardPass import from_param_list_to_str
-from plotsUtil import *
 from plotsUtil_batt import *
+from prettyPlot.plotsUtil import pretty_labels
 
 # Read command line arguments
 args_spm = argument.initArg()
@@ -127,7 +127,7 @@ plt.plot(
     linewidth=3,
     color="r",
 )
-prettyLabels("t [s]", r"$\phi_{s,+}$ [V]", 14)
+pretty_labels("t [s]", r"$\phi_{s,+}$ [V]", 14)
 
 if args_spm.verbose:
     plt.show()

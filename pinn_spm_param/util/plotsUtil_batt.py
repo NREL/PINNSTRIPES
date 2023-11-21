@@ -1,5 +1,111 @@
 import numpy as np
-from plotsUtil import *
+from prettyPlot.plotsUtil import *
+
+
+def line_cs_results(
+    temp_pred,
+    spac_pred,
+    field_pred,
+    time_stamps=[0, 200, 400],
+    xlabel="",
+    ylabel="",
+    title=None,
+    file_path_name=None,
+    temp_dat=None,
+    spac_dat=None,
+    field_dat=None,
+    verbose=False,
+):
+    plot_data = True
+    if temp_dat is None or spac_dat is None or field_dat is None:
+        plot_data = False
+
+    if time_stamps is None or len(time_stamps) < 1:
+        time_stamps = [0]
+
+    # Line color
+    color_stamp = []
+    n_stamp = len(time_stamps)
+    for istamp, stamp in enumerate(time_stamps):
+        color_stamp.append(str(istamp * 0.6 / (n_stamp - 1)))
+
+    # Find closest time to stamps
+    ind_stamp_pred = []
+    ind_stamp_dat = []
+    for stamp in time_stamps:
+        ind_stamp_pred.append(np.argmin(abs(temp_pred - float(stamp))))
+        if plot_data:
+            ind_stamp_dat.append(np.argmin(abs(temp_dat - float(stamp))))
+
+    fig = plt.figure()
+    if plot_data:
+        for istamp in range(len(time_stamps)):
+            plt.plot(
+                spac_dat * 1e6,
+                field_dat[ind_stamp_dat[istamp], :],
+                "-.",
+                linewidth=3,
+                color=color_stamp[istamp],
+            )
+
+    for istamp, stamp in enumerate(time_stamps):
+        plt.plot(
+            spac_pred * 1e6,
+            field_pred[ind_stamp_pred[istamp], :],
+            linewidth=3,
+            color=color_stamp[istamp],
+            label=f"t = {stamp}s",
+        )
+
+    plot_legend()
+    pretty_labels(xlabel, ylabel, 14, title=title)
+    if not verbose and file_path_name is not None:
+        plt.savefig(file_path_name)
+        plt.close()
+
+
+def line_phi_results(
+    temp_pred,
+    field_phie_pred,
+    field_phis_c_pred,
+    xlabel="time (s)",
+    ylabel="(V)",
+    title=None,
+    file_path_name=None,
+    temp_dat=None,
+    field_phie_dat=None,
+    field_phis_c_dat=None,
+    verbose=False,
+):
+    plot_data = True
+    if temp_dat is None or field_phie_dat is None or field_phis_c_dat is None:
+        plot_data = False
+
+    fig = plt.figure()
+    if plot_data:
+        plt.plot(temp_dat, field_phie_dat, "-.", linewidth=3, color="b")
+        plt.plot(temp_dat, field_phis_c_dat, "-.", linewidth=3, color="k")
+
+    plt.plot(
+        temp_pred,
+        field_phie_pred,
+        linewidth=3,
+        color="b",
+        label=r"$\phi_{e}$",
+    )
+    plt.plot(
+        temp_pred,
+        field_phis_c_pred,
+        linewidth=3,
+        color="k",
+        label=r"$\phi_{s,c}$",
+    )
+
+    plot_legend()
+    pretty_labels(xlabel, ylabel, 14, title=title)
+    if not verbose and file_path_name is not None:
+        plt.savefig(file_path_name)
+        plt.close()
 
 
 def plotField_all(fieldList, fieldList2, xList, label, label2, name):
@@ -43,7 +149,7 @@ def plotField_all(fieldList, fieldList2, xList, label, label2, name):
             plt.plot(x_a, field_a[i * nt // 10, :], linewidth=3, color="k")
             if plotField2:
                 plt.plot(x_a, field2_a[i * nt // 10, :], "x", color="b")
-    prettyLabels("x", name, 14, title="anode")
+    pretty_labels("x", name, 14, title="anode")
     # Separator
     fig = plt.figure()
     for i in range(10):
@@ -67,7 +173,7 @@ def plotField_all(fieldList, fieldList2, xList, label, label2, name):
             plt.plot(x_s, field_s[i * nt // 10, :], linewidth=3, color="k")
             if plotField2:
                 plt.plot(x_s, field2_s[i * nt // 10, :], "x", color="b")
-    prettyLabels("x", name, 14, title="separator")
+    pretty_labels("x", name, 14, title="separator")
     # Cathode
     fig = plt.figure()
     for i in range(10):
@@ -91,7 +197,7 @@ def plotField_all(fieldList, fieldList2, xList, label, label2, name):
             plt.plot(x_c, field_c[i * nt // 10, :], linewidth=3, color="k")
             if plotField2:
                 plt.plot(x_c, field2_c[i * nt // 10, :], "x", color="b")
-    prettyLabels("x", name, 14, title="cathode")
+    pretty_labels("x", name, 14, title="cathode")
 
     return
 
@@ -134,7 +240,7 @@ def plotField_electrode(fieldList, fieldList2, xList, label, label2, name):
             plt.plot(x_a, field_a[i * nt // 10, :], linewidth=3, color="k")
             if plotField2:
                 plt.plot(x_a, field2_a[i * nt // 10, :], "x", color="b")
-    prettyLabels("x", name, 14, title="anode")
+    pretty_labels("x", name, 14, title="anode")
     # Cathode
     fig = plt.figure()
     for i in range(10):
@@ -158,7 +264,7 @@ def plotField_electrode(fieldList, fieldList2, xList, label, label2, name):
             plt.plot(x_c, field_c[i * nt // 10, :], linewidth=3, color="k")
             if plotField2:
                 plt.plot(x_c, field2_c[i * nt // 10, :], "x", color="b")
-    prettyLabels("x", name, 14, title="cathode")
+    pretty_labels("x", name, 14, title="cathode")
 
     return
 
@@ -198,8 +304,8 @@ def plotField_single(
                 plt.plot(
                     x, field2[(i + 1) * nt // nlines - 1, :], "x", color="b"
                 )
-    plotLegend()
-    prettyLabels("x", name, 14, title=component)
+    pretty_legend()
+    pretty_labels("x", name, 14, title=component)
 
     return
 
@@ -253,17 +359,17 @@ def plotData(
         text.set_font_properties(font)
         if listXAxisName is None:
             if i_dat == 0:
-                axprettyLabels(axs, "x", "t [s]", 12, listTitle[i_dat])
+                pretty_labels("x", "t [s]", 12, listTitle[i_dat], ax=axs)
             else:
-                axprettyLabels(axs, "x", "", 12, listTitle[i_dat])
+                pretty_labels("x", "", 12, listTitle[i_dat], ax=axs)
         else:
             if i_dat == 0:
-                axprettyLabels(
-                    axs, listXAxisName[i_dat], "t [s]", 12, listTitle[i_dat]
+                pretty_labels(
+                    listXAxisName[i_dat], "t [s]", 12, listTitle[i_dat], ax=axs
                 )
             else:
-                axprettyLabels(
-                    axs, listXAxisName[i_dat], "", 12, listTitle[i_dat]
+                pretty_labels(
+                    listXAxisName[i_dat], "", 12, listTitle[i_dat], ax=axs
                 )
 
         ax.set_xticks([])  # values
@@ -308,27 +414,27 @@ def plotData(
             text.set_font_properties(font)
             if listXAxisName is None:
                 if i_dat == 0:
-                    axprettyLabels(
-                        axs[i_dat], "x", "t [s]", 12, listTitle[i_dat]
+                    pretty_labels(
+                        "x", "t [s]", 12, listTitle[i_dat], ax=axs[i_dat]
                     )
                 else:
-                    axprettyLabels(axs[i_dat], "x", "", 12, listTitle[i_dat])
+                    pretty_labels("x", "", 12, listTitle[i_dat], ax=axs[i_dat])
             else:
                 if i_dat == 0:
-                    axprettyLabels(
-                        axs[i_dat],
+                    pretty_labels(
                         listXAxisName[i_dat],
                         "t [s]",
                         12,
                         listTitle[i_dat],
+                        ax=axs[i_dat],
                     )
                 else:
-                    axprettyLabels(
-                        axs[i_dat],
+                    pretty_labels(
                         listXAxisName[i_dat],
                         "",
                         12,
                         listTitle[i_dat],
+                        ax=axs[i_dat],
                     )
             axs[i_dat].set_xticks([])  # values
             axs[i_dat].set_xticklabels([])  # labels
@@ -401,17 +507,17 @@ def plotCollWeights(
         text.set_font_properties(font)
         if listXAxisName is None:
             if i_dat == 0:
-                axprettyLabels(axs, "x", "t [s]", 12, listTitle[i_dat])
+                pretty_labels("x", "t [s]", 12, listTitle[i_dat], ax=axs)
             else:
-                axprettyLabels(axs, "x", "", 12, listTitle[i_dat])
+                pretty_labels("x", "", 12, listTitle[i_dat], ax=axs)
         else:
             if i_dat == 0:
-                axprettyLabels(
-                    axs, listXAxisName[i_dat], "t [s]", 12, listTitle[i_dat]
+                pretty_labels(
+                    listXAxisName[i_dat], "t [s]", 12, listTitle[i_dat], ax=axs
                 )
             else:
-                axprettyLabels(
-                    axs, listXAxisName[i_dat], "", 12, listTitle[i_dat]
+                pretty_labels(
+                    listXAxisName[i_dat], "", 12, listTitle[i_dat], ax=axs
                 )
 
         ax.set_xticks([])  # values
@@ -458,27 +564,27 @@ def plotCollWeights(
             text.set_font_properties(font)
             if listXAxisName is None:
                 if i_dat == 0:
-                    axprettyLabels(
-                        axs[i_dat], "x", "t [s]", 12, listTitle[i_dat]
+                    pretty_labels(
+                        "x", "t [s]", 12, listTitle[i_dat], ax=axs[i_dat]
                     )
                 else:
-                    axprettyLabels(axs[i_dat], "x", "", 12, listTitle[i_dat])
+                    pretty_labels("x", "", 12, listTitle[i_dat], ax=axs[i_dat])
             else:
                 if i_dat == 0:
-                    axprettyLabels(
-                        axs[i_dat],
+                    pretty_labels(
                         listXAxisName[i_dat],
                         "t [s]",
                         12,
                         listTitle[i_dat],
+                        ax=axs[i_dat],
                     )
                 else:
-                    axprettyLabels(
-                        axs[i_dat],
+                    pretty_labels(
                         listXAxisName[i_dat],
                         "",
                         12,
                         listTitle[i_dat],
+                        ax=axs[i_dat],
                     )
 
             if not i_dat == 0:

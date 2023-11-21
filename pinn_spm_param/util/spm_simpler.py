@@ -113,7 +113,7 @@ def makeParams():
 
 
 if __name__ == "__main__":
-    from plotsUtil import *
+    from prettyPlot.plotsUtil import pretty_labels
 
     params = makeParams()
 
@@ -127,14 +127,14 @@ if __name__ == "__main__":
     cs = np.linspace(0, params["csanmax"], 100)
     u = params["Uocp_a"](cs, params["csanmax"])
     plt.plot(cs, u, color="k", linewidth=3)
-    prettyLabels("cs", "U [V]", 14, r"U$_{ocp,an}$")
+    pretty_labels("cs", "U [V]", 14, r"U$_{ocp,an}$")
 
     # UOCP_c
     fig = plt.figure()
     cs = np.linspace(0, params["cscamax"], 100)
     u = params["Uocp_c"](cs, params["cscamax"])
     plt.plot(cs, u, color="k", linewidth=3)
-    prettyLabels("cs", "U [V]", 14, r"U$_{ocp,ca}$")
+    pretty_labels("cs", "U [V]", 14, r"U$_{ocp,ca}$")
 
     # I0_a
     fig = plt.figure()
@@ -149,7 +149,7 @@ if __name__ == "__main__":
         np.ones(ce.shape).astype("float64"),
     )
     plt.plot(ce, np.array(i0), color="k", linewidth=3)
-    prettyLabels("ce", "i", 14, r"I$_{0,a}$, cmax=csanmax/2")
+    pretty_labels("ce", "i", 14, r"I$_{0,a}$, cmax=csanmax/2")
 
     # I0_c
     fig = plt.figure()
@@ -163,13 +163,13 @@ if __name__ == "__main__":
         params["R"],
     )
     plt.plot(ce, i0, color="k", linewidth=3)
-    prettyLabels("ce", "i", 14, r"I$_{0,c}$, cmax=csanmax/2")
+    pretty_labels("ce", "i", 14, r"I$_{0,c}$, cmax=csanmax/2")
 
     # DS_a
     fig = plt.figure()
     ds_a = params["D_s_a"](params["T"], params["R"])
     plt.plot(np.ones(100) * ds_a, color="k", linewidth=3)
-    prettyLabels("", "Ds", 14, r"D$_{s,a}$")
+    pretty_labels("", "Ds", 14, r"D$_{s,a}$")
 
     # DS_C
     fig = plt.figure()
@@ -177,6 +177,6 @@ if __name__ == "__main__":
     params["D_s_c"] = ds_c_fun_plot_simp
     ds = params["D_s_c"](cs, params["T"], params["R"], params["cscamax"])
     plt.plot(cs, ds, color="k", linewidth=3)
-    prettyLabels("cs", "Ds", 14, r"D$_{s,c}$")
+    pretty_labels("cs", "Ds", 14, r"D$_{s,c}$")
 
     plt.show()

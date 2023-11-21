@@ -8,7 +8,7 @@ sys.path.append("../util")
 import argument
 import tensorflow as tf
 from myNN import *
-from plotsUtil import *
+from prettyPlot.plotsUtil import *
 from tensorflow import keras
 from tensorflow.keras import layers, regularizers
 
@@ -97,16 +97,16 @@ def corr_plot(args):
     fig, axs = plt.subplots(2, 2, figsize=(2 * 3, 2 * 3))
     axs[0, 0].plot(yTest_phie, phie_rescaled, "o", color="k")
     axs[0, 0].plot(yTest_phie, yTest_phie, "--", color="k")
-    axprettyLabels(axs[0, 0], r"$\phi_{e,PDE}$", r"$\phi_{e,PINN}$", 14)
+    pretty_labels(r"$\phi_{e,PDE}$", r"$\phi_{e,PINN}$", 14, ax=axs[0, 0])
     axs[0, 1].plot(yTest_phis_c, phis_c_rescaled, "o", color="k")
     axs[0, 1].plot(yTest_phis_c, yTest_phis_c, "--", color="k")
-    axprettyLabels(axs[0, 1], r"$\phi_{s,c,PDE}$", r"$\phi_{s,c,PINN}$", 14)
+    pretty_labels(r"$\phi_{s,c,PDE}$", r"$\phi_{s,c,PINN}$", 14, ax=axs[0, 1])
     axs[1, 0].plot(yTest_cs_a, cs_a_rescaled, "o", color="k")
     axs[1, 0].plot(yTest_cs_a, yTest_cs_a, "--", color="k")
-    axprettyLabels(axs[1, 0], r"$c_{s,a,PDE}$", r"$c_{s,a,PINN}$", 14)
+    pretty_labels(r"$c_{s,a,PDE}$", r"$c_{s,a,PINN}$", 14, ax=axs[1, 0])
     axs[1, 1].plot(yTest_cs_c, cs_c_rescaled, "o", color="k")
     axs[1, 1].plot(yTest_cs_c, yTest_cs_c, "--", color="k")
-    axprettyLabels(axs[1, 1], r"$c_{s,c,PDE}$", r"$c_{s,c,PINN}$", 14)
+    pretty_labels(r"$c_{s,c,PDE}$", r"$c_{s,c,PINN}$", 14, ax=axs[1, 1])
     currentAxis = 2
 
     if not args.verbose:

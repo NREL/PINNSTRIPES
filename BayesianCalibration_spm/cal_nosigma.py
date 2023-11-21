@@ -83,7 +83,7 @@ import numpyro
 import numpyro.distributions as dist
 from init_pinn import initialize_nn_from_params_config, safe_load
 from numpyro.infer import MCMC, NUTS, SA
-from plotsUtil import plotLegend, prettyLabels
+from prettyPlot.plotsUtil import pretty_labels, pretty_legend
 
 # Read command line arguments
 args_spm = argument.initArg()
@@ -362,7 +362,7 @@ plt.plot(
     label="10th and 90th percentile",
 )
 plt.plot(ranget, std10_real - sigma, "--", color="k", linewidth=3)
-prettyLabels("time [s]", "phis_c", 14)
-plotLegend()
+pretty_labels("time [s]", "phis_c", 14)
+pretty_legend()
 plt.savefig(os.path.join(figureFolder, f"forw_{noise}.png"))
 plt.close()

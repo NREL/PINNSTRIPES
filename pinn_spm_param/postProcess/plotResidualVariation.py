@@ -6,7 +6,7 @@ import numpy as np
 
 sys.path.append("../util")
 import argument
-from plotsUtil import *
+from prettyPlot.plotsUtil import *
 
 print("\n\nINFO: PLOTTING LOSSES\n\n")
 
@@ -123,14 +123,14 @@ def plotProportion(
             else:
                 ax.fill_between(steps, y1, y2)
     if ax == None:
-        prettyLabels("step", "loss proportion", 14, title=title)
-        plotLegend()
+        pretty_abels("step", "loss proportion", 14, title=title)
+        pretty_legend()
         ax = plt.gca()
         start, end = roundSteps(steps)
         ax.xaxis.set_ticks(np.linspace(start, end, 3))
     else:
-        axprettyLabels(ax, "step", "loss proportion", 14, title=title)
-        axplotLegend(ax)
+        pretty_labels(ax, "step", "loss proportion", 14, title=title)
+        pretty_legend(ax=ax)
         start, end = roundSteps(steps)
         ax.xaxis.set_ticks(np.linspace(start, end, 3))
 
@@ -150,13 +150,13 @@ def plotConvergence(steps, residuals, names, title, ax=None):
     else:
         ax.set_yscale("log")
     if ax == None:
-        prettyLabels("step", "residual", 14)
-        plotLegend()
+        pretty_labels("step", "residual", 14)
+        pretty_legend()
         start, end = roundSteps(steps)
         axis.xaxis.set_ticks(np.linspace(start, end, 3))
     else:
-        axprettyLabels(ax, "step", "residual", 14)
-        axplotLegend(ax)
+        pretty_Labels("step", "residual", 14, ax=ax)
+        pretty_legend(ax=ax)
         start, end = roundSteps(steps)
         ax.xaxis.set_ticks(np.linspace(start, end, 3))
 
@@ -176,13 +176,13 @@ def plotLossWeights(steps, lossWeights, names, title, ax=None):
     else:
         ax.set_yscale("log")
     if ax == None:
-        prettyLabels("step", "weights", 14)
-        plotLegend()
+        pretty_labels("step", "weights", 14)
+        pretty_legend()
         start, end = roundSteps(steps)
         axis.xaxis.set_ticks(np.linspace(start, end, 3))
     else:
-        axprettyLabels(ax, "step", "weights", 14)
-        axplotLegend(ax)
+        pretty_labels("step", "weights", 14, ax=ax)
+        pretty_legend(ax=ax)
         start, end = roundSteps(steps)
         ax.xaxis.set_ticks(np.linspace(start, end, 3))
 
@@ -203,14 +203,14 @@ def plotConvergence_rescaledInit(steps, residuals, names, title, ax=None):
     if ax == None:
         axis = plt.gca()
         axis.set_yscale("log")
-        prettyLabels("step", "residual rescaled", 14, title=title)
-        plotLegend()
+        pretty_labels("step", "residual rescaled", 14, title=title)
+        pretty_legend()
         start, end = roundSteps(steps)
         axis.xaxis.set_ticks(np.linspace(start, end, 3))
     else:
         ax.set_yscale("log")
-        axprettyLabels(ax, "step", "residual rescaled", 14, title=title)
-        axplotLegend(ax)
+        pretty_labels("step", "residual rescaled", 14, title=title, ax=ax)
+        pretty_legend(ax=ax)
         start, end = roundSteps(steps)
         ax.xaxis.set_ticks(np.linspace(start, end, 3))
 
@@ -243,14 +243,14 @@ def plotConvergence_rescaledInitFilt(
     if ax == None:
         axis = plt.gca()
         axis.set_yscale("log")
-        prettyLabels("step", "residual rescaled", 14, title=title)
-        plotLegend()
+        pretty_labels("step", "residual rescaled", 14, title=title)
+        pretty_legend()
         start, end = roundSteps(steps)
         axis.xaxis.set_ticks(np.linspace(start, end, 3))
     else:
         ax.set_yscale("log")
-        axprettyLabels(ax, "step", "residual rescaled", 14, title=title)
-        axplotLegend(ax)
+        pretty_labels("step", "residual rescaled", 14, title=title, ax=ax)
+        pretty_legend(ax=ax)
         start, end = roundSteps(steps)
         ax.xaxis.set_ticks(np.linspace(start, end, 3))
 
@@ -616,9 +616,9 @@ def plot_res_var(args):
     else:
         plt.plot(globMSELoss[:, 0], globMSELoss[:, 2], linewidth=3, color="k")
 
-    prettyLabels("epoch", "Global loss", 14)
+    pretty_labels("epoch", "Global loss", 14)
     if DYNAMIC_ATTENTION:
-        plotLegend()
+        pretty_legend()
     ax = plt.gca()
     ax.set_yscale("log")
     if not args.verbose:
@@ -648,9 +648,9 @@ def plot_res_var(args):
     else:
         plt.plot(globMSELoss[:, 1], globMSELoss[:, 2], linewidth=3, color="k")
 
-    prettyLabels("epoch", "Global loss", 14)
+    pretty_labels("epoch", "Global loss", 14)
     if DYNAMIC_ATTENTION:
-        plotLegend()
+        pretty_legend()
     ax = plt.gca()
     ax.set_yscale("log")
     if not args.verbose:
