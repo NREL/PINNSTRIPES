@@ -4,7 +4,7 @@ sys.path.append("../util")
 import argument
 import numpy as np
 from plotsUtil_batt import *
-from prettyPlot.plotsUtil import *
+from prettyPlot.plotsUtil import pretty_labels, pretty_legend
 from thermo import grad_ds_a_cs_a, grad_ds_c_cs_c
 
 # Read command line arguments

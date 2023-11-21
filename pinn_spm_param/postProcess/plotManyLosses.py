@@ -5,7 +5,7 @@ import numpy as np
 
 sys.path.append("../util")
 import argument
-from prettyPlot.plotsUtil import *
+from prettyPlot.plotsUtil import pretty_labels, pretty_legend
 
 print("\n\nINFO: PLOTTING MANY LOSSES\n\n")
 
