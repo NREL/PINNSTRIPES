@@ -7,7 +7,6 @@ sys.path.append("../util")
 import argument
 import tensorflow as tf
 from myNN import *
-from plotsUtil import *
 from plotsUtil_batt import *
 from tensorflow import keras
 from tensorflow.keras import layers, regularizers
@@ -77,8 +76,8 @@ def plot_pde_data(args):
     fig = plt.figure()
     plt.plot(t, phie, label=r"$\phi_e$")
     plt.plot(t, phis_c, label=r"$\phi_{s,c}$")
-    prettyLabels("t", "[V]", 14)
-    plotLegend()
+    pretty_labels("t", "[V]", 14)
+    pretty_legend()
     if not args.verbose:
         plt.savefig(os.path.join(figureFolder, "PhiData.png"))
 

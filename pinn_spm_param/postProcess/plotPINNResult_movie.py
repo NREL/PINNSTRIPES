@@ -10,7 +10,6 @@ from pathlib import Path
 import argument
 import tensorflow as tf
 from myNN import *
-from plotsUtil import *
 from plotsUtil_batt import *
 from tensorflow import keras
 from tensorflow.keras import layers, regularizers
@@ -174,16 +173,16 @@ def makeCorrPlot(movieDir, dataDict, predDict, params_list, indMov, stepID):
     fig, axs = plt.subplots(2, 2, figsize=(2 * 3, 2 * 3))
     axs[0, 0].plot(dataDict["phie"], predDict["phie"], "o", color="k")
     axs[0, 0].plot(dataDict["phie"], dataDict["phie"], "--", color="k")
-    axprettyLabels(axs[0, 0], r"$\phi_{e,PDE}$", r"$\phi_{e,PINN}$", 14)
+    pretty_labels(r"$\phi_{e,PDE}$", r"$\phi_{e,PINN}$", 14, ax=axs[0, 0])
     axs[0, 1].plot(dataDict["phis_c"], predDict["phis_c"], "o", color="k")
     axs[0, 1].plot(dataDict["phis_c"], dataDict["phis_c"], "--", color="k")
-    axprettyLabels(axs[0, 1], r"$\phi_{s,c,PDE}$", r"$\phi_{s,c,PINN}$", 14)
+    pretty_labels(r"$\phi_{s,c,PDE}$", r"$\phi_{s,c,PINN}$", 14, ax=axs[0, 1])
     axs[1, 0].plot(dataDict["cs_a"], predDict["cs_a"], "o", color="k")
     axs[1, 0].plot(dataDict["cs_a"], dataDict["cs_a"], "--", color="k")
-    axprettyLabels(axs[1, 0], r"$c_{s,a,PDE}$", r"$c_{s,a,PINN}$", 14)
+    pretty_labels(r"$c_{s,a,PDE}$", r"$c_{s,a,PINN}$", 14, ax=axs[1, 0])
     axs[1, 1].plot(dataDict["cs_c"], predDict["cs_c"], "o", color="k")
     axs[1, 1].plot(dataDict["cs_c"], dataDict["cs_c"], "--", color="k")
-    axprettyLabels(axs[1, 1], r"$c_{s,c,PDE}$", r"$c_{s,c,PINN}$", 14)
+    pretty_labels(r"$c_{s,c,PDE}$", r"$c_{s,c,PINN}$", 14, ax=axs[1, 1])
     currentAxis = 2
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.suptitle(

@@ -61,7 +61,7 @@ from forwardPass import (
 )
 from init_pinn import initialize_nn_from_params_config, safe_load
 from matplotlib import rc, rcParams
-from plotsUtil import *
+from prettyPlot.plotsUtil import pretty_labels
 
 if args_spm.simpleModel:
     from spm_simpler import *
@@ -182,7 +182,7 @@ for comb in list(combs):
         elif comb[ipar] == 1:
             par_list.append(params["deg_" + name + "_max"])
     plt.plot(data_t, forwardModel(par_list, data_t), "--", color="k")
-prettyLabels("time [s]", r"$\phi_{s,+}$ [V]", 14, title="all pred")
+pretty_labels("time [s]", r"$\phi_{s,+}$ [V]", 14, title="all pred")
 plt.savefig(os.path.join(figureFolder, "bounding.png"))
 plt.close()
 
@@ -215,6 +215,6 @@ for comb in combs:
         linewidth=3,
         color="k",
     )
-prettyLabels("time [s]", r"Rel. Err. $\phi_{s,+}$", 14, title="all pred")
+pretty_labels("time [s]", r"Rel. Err. $\phi_{s,+}$", 14, title="all pred")
 plt.savefig(os.path.join(figureFolder, "err.png"))
 plt.close()

@@ -3,8 +3,8 @@ import sys
 sys.path.append("../util")
 import argument
 import numpy as np
-from plotsUtil import *
 from plotsUtil_batt import *
+from prettyPlot.plotsUtil import pretty_labels, pretty_legend
 from thermo import grad_ds_a_cs_a, grad_ds_c_cs_c
 
 # Read command line arguments
@@ -90,8 +90,8 @@ plt.plot(
     sol["cs_c"][:, -1] / params["cscamax"],
     label=r"$c_{surf,s,c}$/$c_{s,ca,max}$",
 )
-prettyLabels("t", "", 14)
-plotLegend()
+pretty_labels("t", "", 14)
+pretty_legend()
 
 fig = plt.figure()
 plt.plot(
@@ -124,14 +124,14 @@ for i in range(nLines):
         linewidth=3,
         color=str(i / int(nLines * 1.5)),
     )
-prettyLabels("r/R", "", 14)
-plotLegend()
+pretty_labels("r/R", "", 14)
+pretty_legend()
 
 fig = plt.figure()
 plt.plot(config["t"], sol["phie"], label=r"$\phi_e$")
 plt.plot(config["t"], sol["phis_c"], label=r"$\phi_{s,c}$")
-prettyLabels("t", "", 14)
-plotLegend()
+pretty_labels("t", "", 14)
+pretty_legend()
 
 
 # Plot cs

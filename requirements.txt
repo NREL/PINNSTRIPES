@@ -1,6 +1,5 @@
 tensorflow
-imageio
-matplotlib
+prettyPlot>=0.0.2
 pandas<2.0
 corner
 tf2jax

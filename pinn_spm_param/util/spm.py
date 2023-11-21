@@ -111,7 +111,7 @@ if __name__ == "__main__":
     import os
 
     import pandas as pd
-    from plotsUtil import *
+    from prettyPlot.plotsUtil import plt, pretty_labels, pretty_legend
 
     params = makeParams()
     print("rescalePhisCA = ", params["rescale_phis_c"])
@@ -136,20 +136,20 @@ if __name__ == "__main__":
     u = params["Uocp_a"](cs_a_ref, params["csanmax"])
     plt.plot(cs_a_ref, uocp_a_ref, "x", color="r", linewidth=3, label="Exp.")
     plt.plot(cs_a_ref, u, color="k", linewidth=3, label="Interp.")
-    prettyLabels(r"Cs$_{an}$ [kmol/m$^3$]", "U [V]", 14, r"U$_{ocp,an}$")
-    plotLegend()
+    pretty_labels(r"Cs$_{an}$ [kmol/m$^3$]", "U [V]", 14, r"U$_{ocp,an}$")
+    pretty_legend()
     plt.savefig(os.path.join(figureFolder, "uocp_a.png"))
     plt.close()
     gu = np.gradient(u, cs_a_ref)
     guref = np.gradient(uocp_a_ref, cs_a_ref)
     plt.plot(cs_a_ref, guref, "x", color="r", linewidth=3, label="Exp.")
     plt.plot(cs_a_ref, gu, color="k", linewidth=3, label="Interp.")
-    prettyLabels(
+    pretty_labels(
         r"Cs$_{an}$ [kmol/m$^3$]", "", 14, r"$\nabla_{cs}$ U$_{ocp,an}$"
     )
     print(f"min grad gu = {np.amin(abs(gu))}")
     print(f"min grad guref = {np.amin(abs(guref))}")
-    plotLegend()
+    pretty_legend()
     plt.savefig(os.path.join(figureFolder, "guocp_a.png"))
     plt.close()
 
@@ -163,18 +163,18 @@ if __name__ == "__main__":
     u = params["Uocp_c"](cs_c_ref, params["cscamax"])
     plt.plot(cs_c_ref, uocp_c_ref, "x", color="r", linewidth=3, label="Exp.")
     plt.plot(cs_c_ref, u, color="k", linewidth=3, label="Interp.")
-    prettyLabels(r"Cs$_{ca}$ [kmol/m$^3$]", "U [V]", 14, r"U$_{ocp,ca}$")
-    plotLegend()
+    pretty_labels(r"Cs$_{ca}$ [kmol/m$^3$]", "U [V]", 14, r"U$_{ocp,ca}$")
+    pretty_legend()
     plt.savefig(os.path.join(figureFolder, "uocp_c.png"))
     plt.close()
     gu = np.gradient(u, cs_c_ref)
     guref = np.gradient(uocp_c_ref, cs_c_ref)
     plt.plot(cs_c_ref, guref, "x", color="r", linewidth=3, label="Exp.")
     plt.plot(cs_c_ref, gu, color="k", linewidth=3, label="Interp.")
-    prettyLabels(
+    pretty_labels(
         r"Cs$_{ca}$ [kmol/m$^3$]", "", 14, r"$\nabla_{cs}$ U$_{ocp,ca}$"
     )
-    plotLegend()
+    pretty_legend()
     plt.savefig(os.path.join(figureFolder, "guocp_c.png"))
     plt.close()
 
@@ -197,13 +197,13 @@ if __name__ == "__main__":
     )
     plt.plot(cs_a_surf_ref, i0_a_ref, "x", color="r", linewidth=3, label="Ref")
     plt.plot(cs_a_surf_ref, i0, color="k", linewidth=3, label="PINN")
-    prettyLabels(
+    pretty_labels(
         "cs surf [kmol/m3]",
         "i",
         14,
         r"i$_{0,a}$, ce=ce$_{a,0}$, no degradation",
     )
-    plotLegend()
+    pretty_legend()
     plt.savefig(os.path.join(figureFolder, "i0_a.png"))
     plt.close()
 
@@ -225,8 +225,8 @@ if __name__ == "__main__":
     )
     plt.plot(cs_c_surf_ref, i0_c_ref, "x", color="r", linewidth=3, label="Ref")
     plt.plot(cs_c_surf_ref, i0, color="k", linewidth=3, label="PINN")
-    prettyLabels("cs surf [kmol/m3]", "i", 14, r"i$_{0,c}$, ce = ce$_{c,0}$")
-    plotLegend()
+    pretty_labels("cs surf [kmol/m3]", "i", 14, r"i$_{0,c}$, ce = ce$_{c,0}$")
+    pretty_legend()
     plt.savefig(os.path.join(figureFolder, "i0_c.png"))
     plt.close()
 
@@ -239,7 +239,7 @@ if __name__ == "__main__":
     ds_a = params["D_s_a"](T_ref, params["R"])
     plt.plot(T_ref, ds_a_ref, "x", color="r", linewidth=3, label="Ref")
     plt.plot(T_ref, ds_a, color="k", linewidth=3, label="PINN")
-    prettyLabels("T [K]", "Ds", 14, r"D$_{s,a}$")
+    pretty_labels("T [K]", "Ds", 14, r"D$_{s,a}$")
     plt.savefig(os.path.join(figureFolder, "ds_a.png"))
     plt.close()
 
@@ -256,8 +256,8 @@ if __name__ == "__main__":
     ).numpy()
     plt.plot(cs_c_ref, ds_c_ref, "x", color="r", linewidth=3, label="Ref")
     plt.plot(cs_c_ref, ds, color="k", linewidth=3, label="PINN")
-    prettyLabels("cs", "Ds", 14, r"D$_{s,c}$, no degradation")
-    plotLegend()
+    pretty_labels("cs", "Ds", 14, r"D$_{s,c}$, no degradation")
+    pretty_legend()
     plt.savefig(os.path.join(figureFolder, "ds_c.png"))
     plt.close()
 

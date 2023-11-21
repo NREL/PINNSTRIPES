@@ -5,7 +5,7 @@ import numpy as np
 
 sys.path.append("../util")
 import argument
-from plotsUtil import *
+from prettyPlot.plotsUtil import plt, pretty_labels, pretty_legend
 
 print("\n\nINFO: PLOTTING MANY LOSSES\n\n")
 
@@ -76,7 +76,7 @@ if not args.verbose:
 fig = plt.figure()
 for globMSELoss in globMSELosses:
     plt.plot(globMSELoss[:, 0], globMSELoss[:, 2], linewidth=3, color="k")
-prettyLabels("epoch", "Global loss", 14)
+pretty_labels("epoch", "Global loss", 14)
 ax = plt.gca()
 ax.set_yscale("log")
 if not args.verbose:
@@ -86,7 +86,7 @@ if not args.verbose:
 fig = plt.figure()
 for globMSELoss in globMSELosses:
     plt.plot(globMSELoss[:, 1], globMSELoss[:, 2], linewidth=3, color="k")
-prettyLabels("step", "Global loss", 14)
+pretty_labels("step", "Global loss", 14)
 ax = plt.gca()
 ax.set_yscale("log")
 if not args.verbose:
@@ -98,7 +98,7 @@ mean = np.mean(allLossEpochs, axis=1)
 std = np.std(allLossEpochs, axis=1)
 plt.fill_between(allEpochs, mean - std, mean + std, color="k", alpha=0.2)
 plt.plot(allEpochs, mean, linewidth=3, color="k")
-prettyLabels("epoch", "Global loss", 14)
+pretty_labels("epoch", "Global loss", 14)
 ax = plt.gca()
 ax.set_yscale("log")
 if not args.verbose:
@@ -110,7 +110,7 @@ mean = np.mean(allLossSteps, axis=1)
 std = np.std(allLossSteps, axis=1)
 plt.fill_between(allSteps, mean - std, mean + std, color="k", alpha=0.2)
 plt.plot(allSteps, mean, linewidth=3, color="k")
-prettyLabels("step", "Global loss", 14)
+pretty_labels("step", "Global loss", 14)
 ax = plt.gca()
 ax.set_yscale("log")
 if not args.verbose:
