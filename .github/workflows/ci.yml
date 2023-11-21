@@ -2,7 +2,7 @@ name: PINNSTRIPES-CI
 
 on:
    push:
-     branches: [main, prettyPlot_pack]
+     branches: [main]
      paths-ignore:
         - '*.md'
         - 'README*'
