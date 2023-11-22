@@ -463,5 +463,5 @@ def plotCollWeights(
                 globalTitle,
                 fontsize=14,
                 fontweight="bold",
-                fontname="Times New Roman",
+                fontname="serif",
             )
