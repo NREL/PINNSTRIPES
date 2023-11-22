@@ -9,7 +9,7 @@ import sys
 
 import argument
 from computeError import *
-from prettyPlot.plotsUtil import plt, pretty_labels, pretty_legend
+from plotsUtil_batt import *
 from scipy import stats
 
 print("\n\nINFO: COMPUTING MANY METRICS\n\n")

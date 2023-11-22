@@ -41,7 +41,6 @@ import numpy as np
 # from forwardPass import from_param_list_to_dict, from_param_list_to_str
 from forwardPass import from_param_list_to_str
 from plotsUtil_batt import *
-from prettyPlot.plotsUtil import pretty_labels
 
 # Read command line arguments
 args_spm = argument.initArg()

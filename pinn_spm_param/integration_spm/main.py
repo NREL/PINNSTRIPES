@@ -4,7 +4,6 @@ sys.path.append("../util")
 import argument
 import numpy as np
 from plotsUtil_batt import *
-from prettyPlot.plotsUtil import pretty_labels, pretty_legend
 from thermo import grad_ds_a_cs_a, grad_ds_c_cs_c
 
 # Read command line arguments
@@ -135,25 +134,28 @@ pretty_legend()
 
 
 # Plot cs
-plotData(
-    [config["r_a"], config["r_c"]],
-    [sol["cs_a"] / params["csanmax"], sol["cs_c"] / params["cscamax"]],
-    params["tmax"],
-    [r"", r""],
-    [r"$c_{s,an}/c_{s,an,max}$", r"$c_{s,ca}/c_{s,ca,max}$"],
-    ["r [m]", "r [m]"],
+pretty_multi_contour(
+    listDatax=[config["r_a"], config["r_c"]],
+    listData=[
+        sol["cs_a"] / params["csanmax"],
+        sol["cs_c"] / params["cscamax"],
+    ],
+    ybound=[0, params["tmax"]],
+    listCBLabel=[r"", r""],
+    listTitle=[r"$c_{s,an}/c_{s,an,max}$", r"$c_{s,ca}/c_{s,ca,max}$"],
+    listXAxisName=["r [m]", "r [m]"],
     vminList=[0, 0],
     vmaxList=[1, 1],
 )
 
 # Plot cs
-plotData(
-    [config["r_a"], config["r_c"]],
-    [sol["cs_a"], sol["cs_c"]],
-    params["tmax"],
-    [r"", r""],
-    [r"$c_{s,an}$", r"$c_{s,ca}$"],
-    ["r [m]", "r [m]"],
+pretty_multi_contour(
+    listDatax=[config["r_a"], config["r_c"]],
+    listData=[sol["cs_a"], sol["cs_c"]],
+    ybound=[0, params["tmax"]],
+    listCBLabel=[r"", r""],
+    listTitle=[r"$c_{s,an}$", r"$c_{s,ca}$"],
+    listXAxisName=["r [m]", "r [m]"],
 )
 
 if args.verbose:

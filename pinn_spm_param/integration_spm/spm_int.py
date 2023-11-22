@@ -1,11 +1,8 @@
 import sys
-
-import numpy as np
-
-sys.path.append("../util")
 import time
 
-from myProgressBar import printProgressBar
+import numpy as np
+from prettyPlot.progressBar import print_progress_bar
 
 
 def get_r_domain(n_r, params):
@@ -188,7 +185,7 @@ def integration(
     dR_c = config["dR_c"]
 
     if verbose:
-        printProgressBar(
+        print_progress_bar(
             0,
             n_t,
             prefix=f"Step= {0} / {n_t}",
@@ -429,7 +426,7 @@ def integration(
             )
 
         if verbose:
-            printProgressBar(
+            print_progress_bar(
                 i_t,
                 n_t - 1,
                 prefix=f"Step= {i_t} / {n_t}",

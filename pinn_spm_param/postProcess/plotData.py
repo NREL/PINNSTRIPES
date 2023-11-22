@@ -82,13 +82,13 @@ def plot_pde_data(args):
         plt.savefig(os.path.join(figureFolder, "PhiData.png"))
 
     # Plot cs
-    plotData(
-        [r_a, r_c],
-        [cs_a, cs_c],
-        params["tmax"],
-        [r"$[kmol/m^3]$", r"$[kmol/m^3]$"],
-        [r"$c_{s,an}$", r"$c_{s,ca}$"],
-        ["r [m]", "r [m]"],
+    pretty_multi_contour(
+        listDatax=[r_a, r_c],
+        listData=[cs_a, cs_c],
+        ybound=[0, params["tmax"]],
+        listCBLabel=[r"$[kmol/m^3]$", r"$[kmol/m^3]$"],
+        listTitle=[r"$c_{s,an}$", r"$c_{s,ca}$"],
+        listXAxisName=["r [m]", "r [m]"],
     )
     if not args.verbose:
         plt.savefig(os.path.join(figureFolder, "csData.png"))

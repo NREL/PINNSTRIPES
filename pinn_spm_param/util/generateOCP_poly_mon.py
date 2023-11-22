@@ -5,7 +5,7 @@ import black
 import numpy as np
 import pandas as pd
 import tf_lineInterp as tfli
-from myProgressBar import printProgressBar
+from prettyPlot.progressBar import print_progress_bar
 from scipy import odr
 from scipy.optimize import minimize
 
@@ -47,7 +47,7 @@ def polyOpt(order, xd, yd):
 
 def iterativeOpt(order_list, xd, yd):
     error = []
-    printProgressBar(
+    print_progress_bar(
         0,
         len(order_list) - 1,
         prefix=f"Poly Order = {0} / {len(order_list)-1}",
@@ -59,7 +59,7 @@ def iterativeOpt(order_list, xd, yd):
         pars = res.x
         poly = np.poly1d(pars)
         error.append(np.sum(abs(poly(xd) - yd)))
-        printProgressBar(
+        print_progress_bar(
             order,
             len(order_list) - 1,
             prefix=f"Poly Order = {order} / {len(order_list)-1}",

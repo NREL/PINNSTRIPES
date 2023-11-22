@@ -18,7 +18,7 @@ from conditionalDecorator import conditional_decorator
 from custom_activations import swish_activation
 from dataTools import checkDataShape, completeDataset
 from eager_lbfgs import Struct, lbfgs
-from myProgressBar import printProgressBar
+from prettyPlot.progressBar import print_progress_bar
 from tensorflow.keras import backend as K
 from tensorflow.keras import (
     initializers,
@@ -2313,7 +2313,7 @@ class myNN(Model):
         print("Using collocation points: " + self.collocationMode)
 
         # Train
-        printProgressBar(
+        print_progress_bar(
             0,
             self.nEpochs,
             prefix="Loss=%s  Epoch= %d / %d " % ("?", 0, self.nEpochs),
@@ -2776,7 +2776,7 @@ class myNN(Model):
                     ) / (step + 1)
 
                     if not optimized and step % self.freq == 0:
-                        printProgressBar(
+                        print_progress_bar(
                             step,
                             self.n_batch,
                             prefix="Loss=%.2f i=%.2f b=%.2f d=%.2f r=%.2f, t/step=%.2g ms,  Epoch= %d / %d "
@@ -2828,7 +2828,7 @@ class myNN(Model):
                             self.reg_col_weights,
                         )
 
-                printProgressBar(
+                print_progress_bar(
                     epoch + 1,
                     self.nEpochs,
                     prefix="Loss=%.2f i=%.2f b=%.2f d=%.2f r=%.2f, t/step=%.2g ms,  Epoch= %d / %d "
