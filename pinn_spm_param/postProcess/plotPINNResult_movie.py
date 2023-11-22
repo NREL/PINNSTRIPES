@@ -189,7 +189,7 @@ def makeCorrPlot(movieDir, dataDict, predDict, params_list, indMov, stepID):
         "Step " + str(stepID),
         fontsize=14,
         fontweight="bold",
-        fontname="Times New Roman",
+        fontname="serif",
     )
     plt.savefig(
         os.path.join(

@@ -364,7 +364,7 @@ def plotCollWeights(
         ax = cbar.ax
         text = ax.yaxis.label
         font = matplotlib.font_manager.FontProperties(
-            family="times new roman", weight="bold", size=14
+            family="serif", weight="bold", size=14
         )
         text.set_font_properties(font)
         if listXAxisName is None:
@@ -421,7 +421,7 @@ def plotCollWeights(
             ax = cbar.ax
             text = ax.yaxis.label
             font = matplotlib.font_manager.FontProperties(
-                family="times new roman", weight="bold", size=14
+                family="serif", weight="bold", size=14
             )
             text.set_font_properties(font)
             if listXAxisName is None:
@@ -463,5 +463,5 @@ def plotCollWeights(
                 globalTitle,
                 fontsize=14,
                 fontweight="bold",
-                fontname="Times New Roman",
+                fontname="serif",
             )
