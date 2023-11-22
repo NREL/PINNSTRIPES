@@ -18,8 +18,6 @@ from init_pinn import (
     initialize_params_from_inpt,
 )
 from myNN import *
-from myparser import parseInputFile
-from myProgressBar import printProgressBar
 
 
 def do_training_only(input_params, nn):

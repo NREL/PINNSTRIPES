@@ -154,13 +154,13 @@ def plot_pinn_result(args):
         field_dat=field_dat,
         verbose=args.verbose,
     )
-    plotData(
-        [r_test_a[:, :, 0, 0], r_test_c[:, :, 0, 0]],
-        [cs_a[:, :, 0, 0], cs_c[:, :, 0, 0]],
-        tmax,
-        [r"$[kmol/m^3]$", r"$[kmol/m^3]$"],
-        [r"$c_{s,an}$", r"$c_{s,ca}$"],
-        ["r [m]", "r [m]"],
+    pretty_multi_contour(
+        listDatax=[r_test_a[:, :, 0, 0], r_test_c[:, :, 0, 0]],
+        listData=[cs_a[:, :, 0, 0], cs_c[:, :, 0, 0]],
+        ybound=[0, tmax],
+        listCBLabel=[r"$[kmol/m^3]$", r"$[kmol/m^3]$"],
+        listTitle=[r"$c_{s,an}$", r"$c_{s,ca}$"],
+        listXAxisName=["r [m]", "r [m]"],
     )
     if not args.verbose:
         plt.savefig(

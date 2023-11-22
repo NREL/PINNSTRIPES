@@ -13,8 +13,7 @@ import argument
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
 from myNN import *
-from myparser import parseInputFile
-from myProgressBar import printProgressBar
+from prettyPlot.parser import parse_input_file
 
 
 def absolute_path_check(path):
@@ -289,7 +288,7 @@ def initialize_params_from_inpt(inpt):
 
 
 def initialize_params(args):
-    inpt = parseInputFile(args.input_file)
+    inpt = parse_input_file(args.input_file)
     return initialize_params_from_inpt(inpt)
 
 
