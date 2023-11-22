@@ -52,7 +52,9 @@ basicKwargs = {
 
 
 def initialize_params_test(file, kwargs=None):
-    inpt = parseInputFile(file)
+    from prettyPlot.parser import parse_input_file
+
+    inpt = parse_input_file(file)
     if kwargs is not None:
         for key in kwargs:
             inpt[key] = kwargs[key]
