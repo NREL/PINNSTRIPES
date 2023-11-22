@@ -1,6 +1,6 @@
 tensorflow
 prettyPlot>=0.0.5
-pandas<2.0
+pandas
 corner
 tf2jax
 numpyro
