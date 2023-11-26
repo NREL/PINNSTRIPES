@@ -111,7 +111,7 @@ if __name__ == "__main__":
     import os
 
     import pandas as pd
-    from prettyPlot.plotsUtil import plt, pretty_labels, pretty_legend
+    from prettyPlot.plotting import plt, pretty_labels, pretty_legend
 
     params = makeParams()
     print("rescalePhisCA = ", params["rescale_phis_c"])

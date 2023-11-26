@@ -1,5 +1,5 @@
 tensorflow
-prettyPlot>=0.0.7
+prettyPlot>=0.0.8
 pandas
 corner
 tf2jax

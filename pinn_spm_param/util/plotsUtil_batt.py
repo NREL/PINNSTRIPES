@@ -1,5 +1,5 @@
 import numpy as np
-from prettyPlot.plotsUtil import (
+from prettyPlot.plotting import (
     cm,
     make_axes_locatable,
     matplotlib,
