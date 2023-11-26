@@ -113,7 +113,7 @@ def makeParams():
 
 
 if __name__ == "__main__":
-    from prettyPlot.plotsUtil import plt, pretty_labels
+    from prettyPlot.plotting import plt, pretty_labels
 
     params = makeParams()
 

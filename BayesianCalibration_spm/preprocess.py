@@ -52,7 +52,6 @@ tf.keras.backend.set_floatx("float64")
 args_spm = argument.initArg()
 
 import corner  # plotting package
-import matplotlib.pyplot as plt
 import scipy.optimize as opt
 from forwardPass import (
     from_param_list_to_str,
@@ -61,7 +60,7 @@ from forwardPass import (
 )
 from init_pinn import initialize_nn_from_params_config, safe_load
 from matplotlib import rc, rcParams
-from prettyPlot.plotsUtil import pretty_labels
+from prettyPlot.plotting import plt, pretty_labels
 
 if args_spm.simpleModel:
     from spm_simpler import *

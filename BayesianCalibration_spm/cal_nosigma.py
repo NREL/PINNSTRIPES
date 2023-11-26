@@ -78,12 +78,11 @@ import corner
 import jax
 import jax.numpy as jnp
 import jax.random as random
-import matplotlib.pyplot as plt
 import numpyro
 import numpyro.distributions as dist
 from init_pinn import initialize_nn_from_params_config, safe_load
 from numpyro.infer import MCMC, NUTS, SA
-from prettyPlot.plotsUtil import pretty_labels, pretty_legend
+from prettyPlot.plotting import plt, pretty_labels, pretty_legend
 
 # Read command line arguments
 args_spm = argument.initArg()
