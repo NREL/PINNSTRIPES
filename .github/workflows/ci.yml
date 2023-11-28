@@ -34,7 +34,7 @@ jobs:
           pip install black
           pip install isort
           pip install codespell
-      - name: Formatting and sorting import
+      - name: Formatting
         run: |
           source .github/linters/formatting.sh
           format pinn_spm_param true
