@@ -175,14 +175,16 @@ Recommended citations
 
 @article{hassanaly2023Physics1,
   title={Physics-informed neural network surrogates of Li-ion battery models for
-parametric inference. \\Part I: Implementation and multifidelity hierarchies for the single-particle model},
-  author={Malik Hassanaly, Peter J. Weddle, Ryan N. King, Subhayan De, Alireza Doostan, Kandler Smith},
+parametr inference. \\Part I: Implementation and multifidelity hierarchies for the single-particle model},
+  author={Malik Hassanaly, Peter J. Weddle, Ryan N. King, Subhayan De, Alireza Doostan, Corey R. Randall, Eric J. Dufek, Andrew M. Colclasure, 
+Kandler Smith},
   year={2023},
 }
 
 @article{hassanaly2023Physics2,
-  title={Physics-informed neural network surrogates of Li-ion battery models for parametric inference. \\Part II: Regularization and application of the pseudo-2D model},
-  author={Malik Hassanaly, Peter J. Weddle, Ryan N. King, Subhayan De, Alireza Doostan, Kandler Smith},
+  title={Physics-informed neural network surrogates of Li-ion battery models for parametr inference. \\Part II: Regularization and application of the pseudo-2D model},
+  author={Malik Hassanaly, Peter J. Weddle, Ryan N. King, Subhayan De, Alireza Doostan, Corey R. Randall, Eric J. Dufek, Andrew M. Colclasure, 
+Kandler Smith},
   year={2023},
 }
 
