@@ -166,9 +166,6 @@ This work was authored by the National Renewable Energy Laboratory (NREL), opera
 
 ## References
 
-SWR-22-12
-
-
 Recommended citations
 
 ```
@@ -186,6 +183,17 @@ Kandler Smith},
   author={Malik Hassanaly, Peter J. Weddle, Ryan N. King, Subhayan De, Alireza Doostan, Corey R. Randall, Eric J. Dufek, Andrew M. Colclasure, 
 Kandler Smith},
   year={2023},
+}
+
+@misc{osti_2204976,
+title = {PINNSTRIPES (Physics-Informed Neural Network SurrogaTe for Rapidly Identifying Parameters in Energy Systems) [SWR-22-12]},
+author = {Hassanaly, Malik and Smith, Kandler and King, Ryan and Weddle, Peter and USDOE Office of Energy Efficiency and Renewable Energy and USDOE Office of Science},
+abstractNote = {Energy systems models typically take the form of complex partial differential equations which make multiple forward calculations prohibitively expensive. Fast and data-efficient construction of surrogate models is of utmost importance for applications that require parameter exploration such as design optimization and Bayesian calibration. In presence of a large number of parameters, surrogate models that capture correct dependencies may be difficult to construct with traditional techniques. The issue is addressed here with the formulation of the surrogate model constructed via Physics-Informed Neural Networks (PINN) which capture the dependence with respect to the parameters to estimate, while using a limited amount of data. Since forward evaluations of the surrogate model are cheap, parameter exploration is made inexpensive, even when considering a large number of parameters.},
+url = {https://www.osti.gov//servlets/purl/2204976},
+doi = {10.11578/dc.20231106.1},
+url = {https://www.osti.gov/biblio/2204976}, year = {2023},
+month = {10},
+note =
 }
 
 ```
