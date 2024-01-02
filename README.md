@@ -168,21 +168,30 @@ This work was authored by the National Renewable Energy Laboratory (NREL), opera
 
 Recommended citations
 
+[Paper 1 (Open access)](https://arxiv.org/pdf/2312.17329.pdf)
+
+[Paper 2 (Open access)](https://arxiv.org/pdf/2312.17336.pdf)
+
+
+
 ```
 
-@article{hassanaly2023Physics1,
-  title={Physics-informed neural network surrogates of Li-ion battery models for
-parametr inference. \\Part I: Implementation and multifidelity hierarchies for the single-particle model},
-  author={Malik Hassanaly, Peter J. Weddle, Ryan N. King, Subhayan De, Alireza Doostan, Corey R. Randall, Eric J. Dufek, Andrew M. Colclasure, 
-Kandler Smith},
-  year={2023},
+@article{hassanaly2023pinn1,
+      title={{PINN surrogate of Li-ion battery models for parameter inference. Part I: Implementation and multi-fidelity hierarchies for the single-particle model}}, 
+      author={Malik Hassanaly and Peter J. Weddle and Ryan N. King and Subhayan De and Alireza Doostan and Corey R. Randall and Eric J. Dufek and Andrew M. Colclasure and Kandler Smith},
+      year={2023},
+      eprint={2312.17329},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
 }
 
-@article{hassanaly2023Physics2,
-  title={Physics-informed neural network surrogates of Li-ion battery models for parametr inference. \\Part II: Regularization and application of the pseudo-2D model},
-  author={Malik Hassanaly, Peter J. Weddle, Ryan N. King, Subhayan De, Alireza Doostan, Corey R. Randall, Eric J. Dufek, Andrew M. Colclasure, 
-Kandler Smith},
-  year={2023},
+@article{hassanaly2023pinn2,
+      title={{PINN surrogate of Li-ion battery models for parameter inference. Part II: Regularization and application of the pseudo-2D model}}, 
+      author={Malik Hassanaly and Peter J. Weddle and Ryan N. King and Subhayan De and Alireza Doostan and Corey R. Randall and Eric J. Dufek and Andrew M. Colclasure and Kandler Smith},
+      year={2023},
+      eprint={2312.17336},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
 }
 
 @misc{osti_2204976,
