@@ -34,7 +34,7 @@ Consider looking at the test suite in `pinn_spm_param/tests`, `BayesianCalibrati
 
 `bash convert_to_simp.sh` will enable training with simple electrochemical and transport properties
 
-`bash convert_to_float64.sh` will enable training with realistic electrochemical and transport properties
+`bash convert_to_nosimp.sh` will enable training with realistic electrochemical and transport properties
 
 `Data` contains experimental measurements of Uocp that are used to generate the Uocp functions in `pinn_spm_param/util/generateOCP.py` and `pinn_spm_param/util/generateOCP_poly_mon.py` 
 
