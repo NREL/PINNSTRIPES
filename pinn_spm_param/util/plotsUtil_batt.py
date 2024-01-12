@@ -2,6 +2,7 @@ import numpy as np
 from prettyPlot.plotting import (
     cm,
     make_axes_locatable,
+    make_movie,
     matplotlib,
     plt,
     pretty_labels,

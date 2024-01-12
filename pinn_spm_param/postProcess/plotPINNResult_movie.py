@@ -296,32 +296,32 @@ for i_model, step in enumerate(step_str_sorted):
 
 param_string = from_param_list_to_str(params_list)
 
-makeMovie(
+make_movie(
     len(step_str_sorted),
     movieDir,
     os.path.join(figureFolder, modelFolderFig, f"line_cs_a{param_string}.gif"),
     prefix=f"cs_a{param_string}_",
 )
-makeMovie(
+make_movie(
     len(step_str_sorted),
     movieDir,
     os.path.join(figureFolder, modelFolderFig, f"line_cs_c{param_string}.gif"),
     prefix=f"cs_c{param_string}_",
 )
-makeMovie(
+make_movie(
     len(step_str_sorted),
     movieDir,
     os.path.join(figureFolder, modelFolderFig, f"cs2D{param_string}.gif"),
     prefix=f"cs2D{param_string}_",
 )
-makeMovie(
+make_movie(
     len(step_str_sorted),
     movieDir,
     os.path.join(figureFolder, modelFolderFig, f"phi{param_string}.gif"),
     prefix=f"phi{param_string}_",
 )
 if sol_true is not None:
-    makeMovie(
+    make_movie(
         len(step_str_sorted),
         movieDir,
         os.path.join(figureFolder, modelFolderFig, f"corr{param_string}.gif"),
