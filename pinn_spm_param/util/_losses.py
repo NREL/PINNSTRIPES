@@ -1598,6 +1598,7 @@ def interior_loss(self, int_col_pts=None, int_col_params=None, tmax=None):
             )
             j_a = (i0_a / self.params["F"]) * (exp1_a - exp2_a)
         else:
+            # eta_a does not contain 0.5 factor, so no need to multiply by 2
             j_a = i0_a * eta_a / (self.params["R"] * self.params["T"])
 
         j_a_rhs = self.params["j_a"]
@@ -1639,6 +1640,7 @@ def interior_loss(self, int_col_pts=None, int_col_params=None, tmax=None):
             )
             j_c = (i0_c / self.params["F"]) * (exp1_c - exp2_c)
         else:
+            # eta_c does not contain 0.5 factor, so no need to multiply by 2
             j_c = i0_c * eta_c / (self.params["R"] * self.params["T"])
 
         j_c_rhs = self.params["j_c"]
