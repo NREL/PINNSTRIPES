@@ -22,8 +22,8 @@ Results may vary depending on your initial seed, but after step 3., `pinn_spm_pa
 
 <p float="left">
   <img src="assets/corr_0.5_1.gif" width="250"/>
-  <img src="assets/cs2D_0.5_1.gif" width="350"/>
-  <img src="assets/phi_0.5_1.gif" width="250"/>
+  <img src="assets/cs2D_0.5_1.gif" width="400"/>
+  <img src="assets/phi_0.5_1.gif" width="400"/>
 </p>
 
 Consider looking at the test suite in `pinn_spm_param/tests`, `BayesianCalibration_spm/exec_test.sh`, and `.github/workflows/ci.yml` to understand how to use the code
