@@ -312,9 +312,11 @@ class myNN(Model):
         self.alpha_unweighted = [np.float64(1.0) for alphaEntry in alpha]
         if self.annealingWeights:
             self.alpha = [
-                np.float64(1.0)
-                if np.float64(alphaEntry) > np.float64(1e-12)
-                else np.float64(0.0)
+                (
+                    np.float64(1.0)
+                    if np.float64(alphaEntry) > np.float64(1e-12)
+                    else np.float64(0.0)
+                )
                 for alphaEntry in alpha
             ]
         self.phis_a0 = np.float64(0.0)
@@ -650,10 +652,12 @@ class myNN(Model):
         else:
             self.new_nData = self.n_batch
             self.xDataList_full = [
-                np.zeros((self.n_batch, self.dim_inpt)).astype("float64")
-                if i in [self.ind_cs_a_data, self.ind_cs_c_data]
-                else np.zeros((self.n_batch, self.dim_inpt - 1)).astype(
-                    "float64"
+                (
+                    np.zeros((self.n_batch, self.dim_inpt)).astype("float64")
+                    if i in [self.ind_cs_a_data, self.ind_cs_c_data]
+                    else np.zeros((self.n_batch, self.dim_inpt - 1)).astype(
+                        "float64"
+                    )
                 )
                 for i in range(self.n_data_terms)
             ]
