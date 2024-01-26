@@ -14,9 +14,17 @@ Located in `pinn_spm_param`
 
 1. `pinn_spm_param/preProcess`: make the data from finite difference integration. Do `bash exec.sh`
 
-2. `pinn_spm_param`: the main script is `main.py` which starts the training. Do `bash exec_opt.sh` for training in production mode. Do `bash exec_noOpt.sh` for training in debug mode. 
+2. `pinn_spm_param`: the main script is `main.py` which starts the training. Do `bash exec_opt.sh` for training in production mode. Do `bash exec_noOpt.sh` for training in debug mode. The debug mode is slower but allows for easily inspecting the tensor shapes. This will execute a training with no data.
 
 3. `pinn_spm_param/postProcess`: post-process the PINN training result. Link the correct model and log folder in `exec.sh` and do `bash exec.sh`
+
+Results may vary depending on your initial seed, but after step 3., `pinn_spm_param/postProcess/Figures` folder will contain (among other images) movies of the predicted solution. Left panel shows correlation between the PDE and the PINN solution, middle panel shows the time history of the predicted radial dependent Li concentration in each electrode as training advances, right panel shows the time history of the predicted electrolyte and cathode potentials as training advances.
+
+<p float="left">
+  <img src="assets/corr_0.5_1.gif" width="250"/>
+  <img src="assets/cs2D_0.5_1.gif" width="350"/>
+  <img src="assets/phi_0.5_1.gif" width="250"/>
+</p>
 
 Consider looking at the test suite in `pinn_spm_param/tests`, `BayesianCalibration_spm/exec_test.sh`, and `.github/workflows/ci.yml` to understand how to use the code
 

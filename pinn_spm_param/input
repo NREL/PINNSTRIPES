@@ -8,8 +8,8 @@ LOAD_MODEL :			None
 ! ~~~~ Weighting
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ !
 alpha :                         1.0 1.0 0.0 0.0
-w_phie_int : 1.0
-w_phis_c_int : 1.0
+w_phie_int : 10.0
+w_phis_c_int : 10.0
 w_cs_a_int : 10.0
 w_cs_c_int : 10.0
 
