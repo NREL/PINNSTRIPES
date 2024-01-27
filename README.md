@@ -22,7 +22,7 @@ Results may vary depending on your initial seed, but after step 3., `pinn_spm_pa
 
 <p float="left">
   <img src="assets/corr_0.5_1.gif" width="175"/>
-  <img src="assets/cs2D_0.5_1.gif" width="245"/>
+  <img src="assets/cs2D_0.5_1.gif" width="260"/>
   <img src="assets/phi_0.5_1.gif" width="245"/>
 </p>
 
