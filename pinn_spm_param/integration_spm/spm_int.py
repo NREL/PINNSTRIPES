@@ -194,7 +194,7 @@ def integration(
         )
     for i_t in range(1, n_t):
         # for i_t in range(1,2):
-        # GET PHIE: -I/A = ja = (i0/F) * sinh ( (F/RT) (-phie - Uocp_a))
+        # GET PHIE: -I/A = ja = (2 i0/F) * sinh ( 0.5 * (F/RT) (-phie - Uocp_a))
         cse_a = sol["cs_a"][i_t - 1, -1]
         i0_a = params["i0_a"](
             cse_a,
@@ -208,8 +208,10 @@ def integration(
         Uocp_a = params["Uocp_a"](cse_a, params["csanmax"])
         if not LINEARIZE_J:
             sol["phie"][i_t] = (
-                -(params["R"] * params["T"] / params["F"])
-                * np.arcsinh(sol["j_a"] * params["F"] / i0_a)
+                -(np.float64(2.0) * params["R"] * params["T"] / params["F"])
+                * np.arcsinh(
+                    sol["j_a"] * params["F"] / (np.float64(2.0) * i0_a)
+                )
                 - Uocp_a
             )
         else:
@@ -220,7 +222,7 @@ def integration(
                 - Uocp_a
             )
 
-        # GET PHIS_c: I/A = jc = (i0/F) * sinh ( (F/RT) (phis_c -phie - Uocp_c))
+        # GET PHIS_c: I/A = jc = (2 i0/F) * sinh ( 0.5 (F/RT) (phis_c -phie - Uocp_c))
         cse_c = sol["cs_c"][i_t - 1, -1]
         i0_c = params["i0_c"](
             cse_c,
@@ -233,8 +235,10 @@ def integration(
         Uocp_c = params["Uocp_c"](cse_c, params["cscamax"])
         if not LINEARIZE_J:
             sol["phis_c"][i_t] = (
-                (params["R"] * params["T"] / params["F"])
-                * np.arcsinh(sol["j_c"] * params["F"] / i0_c)
+                (np.float64(2.0) * params["R"] * params["T"] / params["F"])
+                * np.arcsinh(
+                    sol["j_c"] * params["F"] / (np.float64(2.0) * i0_c)
+                )
                 + Uocp_c
                 + sol["phie"][i_t]
             )
