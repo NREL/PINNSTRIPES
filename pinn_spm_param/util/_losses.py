@@ -1684,9 +1684,9 @@ def interior_loss(self, int_col_pts=None, int_col_params=None, tmax=None):
             - ds_a_r * cs_a_r
         ],  # cs at anode
         [
-            cs_c_t / deg_ds_c
-            - cs_c_r_r * ds_c / deg_ds_c
-            - np.float64(2.0) * ds_c * cs_c_r / (deg_ds_c * r_c)
+            cs_c_t
+            - cs_c_r_r * ds_c
+            - np.float64(2.0) * ds_c * cs_c_r / r_c
             - ds_c_r * cs_c_r
         ],  # cs at cathode
     ]
@@ -1873,10 +1873,7 @@ def boundary_loss(self, bound_col_pts=None, bound_col_params=None, tmax=None):
         ],
         [
             (np.float64(1.0) - tf.exp(-t_bound / self.hard_IC_timescale))
-            * (
-                deg_ds_c_bound * cs_rmax_c_bound_r
-                + deg_ds_c_bound * j_c / ds_rmax_c_bound
-            )
+            * (cs_rmax_c_bound_r + j_c / ds_rmax_c_bound)
         ],
     ]
 
