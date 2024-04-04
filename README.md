@@ -2,7 +2,7 @@
 
 ## Installing
 
-1. `conda create --name pinnstripes python=3.10`
+1. `conda create --name pinnstripes python=3.11`
 2. `conda activate pinnstripes`
 3. `pip install -r requirements.txt`
 
