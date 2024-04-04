@@ -1,11 +1,11 @@
 import sys
 
-import keras
 import numpy as np
 import tensorflow as tf
+from keras.backend import set_floatx
 from thermo import *
 
-keras.backend.set_floatx("float64")
+set_floatx("float64")
 
 print("INFO: USING REALISTIC SPM MODEL")
 

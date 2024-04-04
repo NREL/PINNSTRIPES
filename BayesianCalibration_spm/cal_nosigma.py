@@ -3,11 +3,13 @@ import json
 import os
 import sys
 
-import keras
 import numpy as np
 import tensorflow as tf
 import tf2jax
 from keras import layers
+from keras.backend import set_floatx
+
+set_floatx("float64")
 
 parser = argparse.ArgumentParser(description="BNN interface for pouch cells")
 parser.add_argument(

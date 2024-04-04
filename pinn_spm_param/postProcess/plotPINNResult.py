@@ -6,7 +6,6 @@ import numpy as np
 
 sys.path.append("../util")
 import argument
-import keras
 import tensorflow as tf
 from forwardPass import (
     from_param_list_to_str,
@@ -15,10 +14,11 @@ from forwardPass import (
 )
 from init_pinn import initialize_nn_from_params_config, safe_load
 from keras import layers, regularizers
+from keras.backend import set_floatx
 from myNN import *
 from plotsUtil_batt import *
 
-keras.backend.set_floatx("float64")
+set_floatx("float64")
 
 print("\n\nINFO: PLOTTING RESULTS OF THE PINN TRAINING\n\n")
 
