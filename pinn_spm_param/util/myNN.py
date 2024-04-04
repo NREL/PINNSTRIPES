@@ -4,7 +4,6 @@ import sys
 import time
 
 import argument
-import keras
 import numpy as np
 import tensorflow as tf
 from _losses import (
@@ -25,8 +24,9 @@ from keras.constraints import max_norm, unit_norm
 from keras.layers import *
 from keras.models import Model
 from prettyPlot.progressBar import print_progress_bar
+from keras.backend import set_floatx
 
-keras.backend.set_floatx("float64")
+set_floatx("float64")
 
 # Read command line arguments
 args = argument.initArg()

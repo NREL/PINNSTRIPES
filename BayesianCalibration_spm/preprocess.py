@@ -41,12 +41,12 @@ noise = args.noise
 sys.path.append(args.utilFolder)
 
 import argument
-import keras
 import tensorflow as tf
 from keras import layers, regularizers
 from myNN import *
+from keras.backend import set_floatx
 
-keras.backend.set_floatx("float64")
+set_floatx("float64")
 
 # Read command line arguments
 args_spm = argument.initArg()

@@ -8,13 +8,13 @@ sys.path.append("../util")
 from pathlib import Path
 
 import argument
-import keras
 import tensorflow as tf
 from keras import layers, regularizers
 from myNN import *
-from tensorflow import keras
+from keras.backend import set_floatx
 
-keras.backend.set_floatx("float64")
+set_floatx("float64")
+
 from forwardPass import (
     from_param_list_to_str,
     make_data_dict,

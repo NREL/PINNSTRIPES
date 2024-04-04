@@ -6,13 +6,13 @@ import numpy as np
 
 sys.path.append("../util")
 import argument
-import keras
 import tensorflow as tf
 from keras import layers, regularizers
 from myNN import *
 from plotsUtil_batt import *
+from keras.backend import set_floatx
 
-keras.backend.set_floatx("float64")
+set_floatx("float64")
 
 from init_pinn import initialize_nn_from_params_config, safe_load
 
