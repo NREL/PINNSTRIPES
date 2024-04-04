@@ -38,12 +38,12 @@ def getModelStep(modelFolder):
             a = model_tmp.pop(i)
         else:
             try:
-                a = float(entry[5:-3])
+                a = float(entry[5:-11])
             except ValueError:
                 a = model_tmp.pop(i)
 
-    step_float = [float(entry[5:-3]) for entry in model_tmp]
-    step_str = [entry[5:-3] for entry in model_tmp]
+    step_float = [float(entry[5:-11]) for entry in model_tmp]
+    step_str = [entry[5:-11] for entry in model_tmp]
     index_sort = np.argsort(step_float)
     step_float_sorted = [step_float[i] for i in list(index_sort)]
     step_str_sorted = [step_str[i] for i in list(index_sort)]

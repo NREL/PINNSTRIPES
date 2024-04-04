@@ -62,9 +62,9 @@ jobs:
       - name: Test SPM preprocess
         run: |
           cd pinn_spm_param/integration_spm
-          python main.py -nosimp -opt -lean
+          python main.py -nosimp -opt -lean -p 0.5 1
           cd ../preProcess
-          python makeDataset_spm.py -nosimp -df ../integration_spm -frt 1
+          python makeDataset_spm.py -nosimp -df ../integration_spm -frt 1 -p 0.5 1
       - name: Test SPM
         run: |
           cd pinn_spm_param/tests
@@ -80,6 +80,5 @@ jobs:
           pytest -v test_spm_utils.py
       - name: Test SPM Bayesian calibration
         run: |
-          cp pinn_spm_param/integration_spm/solution.npz  pinn_spm_param/integration_spm/solution_0.5_1.npz
           cd BayesianCalibration_spm
           bash exec_test.sh

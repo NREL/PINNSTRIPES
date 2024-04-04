@@ -10,6 +10,7 @@ def test_plot_data():
     from plotData import plot_pde_data
 
     args.dataFolder = "../integration_spm"
+    args.params_list = ["0.5", "1.0"]
     plot_pde_data(args)
 
 
@@ -17,7 +18,7 @@ def test_corr_plot():
     from plotCorrelationPINNvsData import corr_plot
 
     args.modelFolder = "Model_1"
-    args.params_list = None
+    args.params_list = ["0.5", "1.0"]
     corr_plot(args)
 
 
@@ -43,7 +44,7 @@ def test_comp_err():
 
     args.modelFolder = "Model_1"
     args.dataFolder = "../integration_spm"
-    args.params_list = None
+    args.params_list = ["0.5", "1.0"]
     if args.simpleModel:
         from spm_simpler import makeParams
     else:
