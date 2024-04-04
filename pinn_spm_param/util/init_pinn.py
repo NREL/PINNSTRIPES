@@ -516,8 +516,8 @@ def initialize_nn(args, input_params):
     )
 
     if not args.optimized:
-        from tensorflow import keras
-        from tensorflow.keras.utils import plot_model
+        import keras
+        from keras.utils import plot_model
 
         try:
             plot_model(

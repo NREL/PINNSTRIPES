@@ -84,7 +84,7 @@ def load_model(
     nn = init_pinn.initialize_nn_from_params_config(params_loaded, configDict)
 
     # Load weights
-    nn = init_pinn.safe_load(nn, os.path.join(modelFolder, "best.h5"))
+    nn = init_pinn.safe_load(nn, os.path.join(modelFolder, "best.weights.h5"))
 
     # Reload
     reload(

@@ -8,13 +8,13 @@ sys.path.append("../util")
 from pathlib import Path
 
 import argument
+import keras
 import tensorflow as tf
 from myNN import *
 from plotsUtil_batt import *
-from tensorflow import keras
-from tensorflow.keras import layers, regularizers
+from keras import layers, regularizers
 
-tf.keras.backend.set_floatx("float64")
+keras.backend.set_floatx("float64")
 
 from forwardPass import (
     from_param_list_to_str,
@@ -278,7 +278,7 @@ modelFolderFig = (
 path = Path(os.path.join(figureFolder, modelFolderFig))
 path.mkdir(parents=True, exist_ok=True)
 for i_model, step in enumerate(step_str_sorted):
-    nn = safe_load(nn, os.path.join(modelFolder, f"step_{step}.h5"))
+    nn = safe_load(nn, os.path.join(modelFolder, f"step_{step}.weights.h5"))
     sol_dict = pinn_pred_struct(nn, params_list)
     makePlot(
         movieDir,

@@ -1,17 +1,17 @@
 import json
-import os
 import sys
 
 import numpy as np
 
 sys.path.append("../util")
 import argument
+
+import keras
 import tensorflow as tf
 from myNN import *
-from tensorflow import keras
-from tensorflow.keras import layers, regularizers
+from keras import layers, regularizers
 
-tf.keras.backend.set_floatx("float64")
+keras.backend.set_floatx("float64")
 
 from init_pinn import initialize_nn_from_params_config
 

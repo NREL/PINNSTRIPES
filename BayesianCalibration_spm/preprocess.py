@@ -43,10 +43,13 @@ sys.path.append(args.utilFolder)
 import argument
 import tensorflow as tf
 from myNN import *
-from tensorflow import keras
-from tensorflow.keras import layers, regularizers
 
-tf.keras.backend.set_floatx("float64")
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+from keras import layers, regularizers
+
+keras.backend.set_floatx("float64")
 
 # Read command line arguments
 args_spm = argument.initArg()

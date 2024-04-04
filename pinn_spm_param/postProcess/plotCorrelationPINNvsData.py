@@ -6,13 +6,14 @@ import numpy as np
 
 sys.path.append("../util")
 import argument
+
+import keras
 import tensorflow as tf
 from myNN import *
 from plotsUtil_batt import *
-from tensorflow import keras
-from tensorflow.keras import layers, regularizers
+from keras import layers, regularizers
 
-tf.keras.backend.set_floatx("float64")
+keras.backend.set_floatx("float64")
 
 from init_pinn import initialize_nn_from_params_config, safe_load
 
@@ -56,7 +57,7 @@ def corr_plot(args):
             configDict = json.load(json_file)
         nn = initialize_nn_from_params_config(params, configDict)
 
-    nn = safe_load(nn, os.path.join(modelFolder, "best.h5"))
+    nn = safe_load(nn, os.path.join(modelFolder, "best.weights.h5"))
     model = nn.model
     from forwardPass import (
         from_param_list_to_str,

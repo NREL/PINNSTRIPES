@@ -3,6 +3,8 @@ import json
 import os
 import sys
 
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import keras
 import numpy as np
 import tensorflow as tf

@@ -1,12 +1,14 @@
 import argument
 import numpy as np
+import keras
 import tensorflow as tf
 from conditionalDecorator import conditional_decorator
-from tensorflow.keras import backend as K
-from tensorflow.keras.layers import Activation
-from tensorflow.keras.utils import get_custom_objects
 
-tf.keras.backend.set_floatx("float64")
+from keras import backend as K
+from keras.layers import Activation
+from keras.utils import get_custom_objects
+
+keras.backend.set_floatx("float64")
 
 # Read command line arguments
 args = argument.initArg()
@@ -26,7 +28,7 @@ def swish_activation(x):
     return x * K.sigmoid(x)
 
 
-class Bswish(tf.keras.layers.Layer):
+class Bswish(keras.layers.Layer):
     def __init__(self, num_outputs):
         super(Bswish, self).__init__()
         self.num_outputs = num_outputs
