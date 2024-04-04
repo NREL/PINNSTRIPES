@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from conditionalDecorator import conditional_decorator
 from keras.backend import set_floatx
-from keras.layers import Activation
+from keras.layers import Activation, Layer
 from keras.utils import get_custom_objects
 
 set_floatx("float64")
@@ -26,7 +26,7 @@ def swish_activation(x):
     return x * tf.math.sigmoid(x)
 
 
-class Bswish(keras.layers.Layer):
+class Bswish(Layer):
     def __init__(self, num_outputs):
         super(Bswish, self).__init__()
         self.num_outputs = num_outputs
