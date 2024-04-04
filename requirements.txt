@@ -1,8 +1,8 @@
 tensorflow
-prettyPlot>=0.0.25
+prettyPlot>=0.0.31
 pandas
 corner
 tf2jax
 numpyro
-black
+black>=24.3.0
 scikit-learn
