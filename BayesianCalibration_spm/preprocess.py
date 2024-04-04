@@ -111,7 +111,7 @@ else:
             for par_name in params["deg_params_names"]
         ]
 
-nn = safe_load(nn, os.path.join(modelFolder, "best.h5"))
+nn = safe_load(nn, os.path.join(modelFolder, "best.weights.h5"))
 model = nn.model
 # rescale
 resc_r = params["rescale_R"]
