@@ -5,11 +5,10 @@ import numpy as np
 
 sys.path.append("../util")
 import argument
-
 import keras
 import tensorflow as tf
-from myNN import *
 from keras import layers, regularizers
+from myNN import *
 
 keras.backend.set_floatx("float64")
 

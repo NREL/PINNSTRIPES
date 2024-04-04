@@ -1,8 +1,8 @@
-import sys
 import os
-import numpy as np
+import sys
 
 import keras
+import numpy as np
 import tensorflow as tf
 from thermo import *
 

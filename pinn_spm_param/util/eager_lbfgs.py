@@ -391,7 +391,9 @@ def lbfgs(
             if bestLoss is None or currentLoss < bestLoss:
                 bestLoss = currentLoss
                 safe_save(
-                    model, os.path.join(modelFolder, "best.weights.h5"), overwrite=True
+                    model,
+                    os.path.join(modelFolder, "best.weights.h5"),
+                    overwrite=True,
                 )
             if nIter % 10 == 0:
                 safe_save(

@@ -1,9 +1,8 @@
 import argument
-import numpy as np
 import keras
+import numpy as np
 import tensorflow as tf
 from conditionalDecorator import conditional_decorator
-
 from keras import backend as K
 from keras.layers import Activation
 from keras.utils import get_custom_objects

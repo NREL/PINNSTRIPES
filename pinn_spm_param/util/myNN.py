@@ -4,8 +4,8 @@ import sys
 import time
 
 import argument
-import numpy as np
 import keras
+import numpy as np
 import tensorflow as tf
 from _losses import (
     loss_fn,
@@ -19,18 +19,12 @@ from conditionalDecorator import conditional_decorator
 from custom_activations import swish_activation
 from dataTools import checkDataShape, completeDataset
 from eager_lbfgs import Struct, lbfgs
-from prettyPlot.progressBar import print_progress_bar
-from keras import (
-    initializers,
-    layers,
-    losses,
-    optimizers,
-    regularizers,
-)
+from keras import initializers, layers, losses, optimizers, regularizers
 from keras.callbacks import CSVLogger
 from keras.constraints import max_norm, unit_norm
 from keras.layers import *
 from keras.models import Model
+from prettyPlot.progressBar import print_progress_bar
 
 keras.backend.set_floatx("float64")
 
@@ -619,10 +613,7 @@ class myNN(Model):
 
         # Log model
         n_trainable_par = np.sum(
-            [
-                np.prod(v._shape)
-                for v in self.model.trainable_variables
-            ]
+            [np.prod(v._shape) for v in self.model.trainable_variables]
         )
         self.vprint("Num trainable param = ", n_trainable_par)
         self.n_trainable_par = n_trainable_par
@@ -2766,9 +2757,6 @@ class myNN(Model):
                     if self.useLossThreshold:
                         lt, lt_old = self.dynamic_control_lt(lt)
 
-
-
-
                     train_mse_loss = (
                         (step) * train_mse_loss + tf.reduce_sum(mse)
                     ) / (step + 1)
@@ -3429,7 +3417,6 @@ class myNN(Model):
     def k_set_value(self, x, value):
         value = np.asarray(value, dtype=x.dtype)
         x.assign(value)
-
 
     def logTraining(self, epoch, mse, bestLoss, mse_unweighted=None):
         f = open(os.path.join(self.logLossFolder, "log.csv"), "a+")

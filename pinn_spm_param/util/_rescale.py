@@ -1,7 +1,6 @@
 import argument
-import numpy as np
-
 import keras
+import numpy as np
 import tensorflow as tf
 from conditionalDecorator import conditional_decorator
 

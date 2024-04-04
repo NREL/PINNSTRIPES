@@ -1,7 +1,7 @@
 import sys
-import numpy as np
 
 import keras
+import numpy as np
 import tensorflow as tf
 from uocp_cs import uocp_a_fun_x, uocp_c_fun_x
 

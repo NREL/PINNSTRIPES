@@ -10,9 +10,9 @@ from pathlib import Path
 import argument
 import keras
 import tensorflow as tf
+from keras import layers, regularizers
 from myNN import *
 from plotsUtil_batt import *
-from keras import layers, regularizers
 
 keras.backend.set_floatx("float64")
 
