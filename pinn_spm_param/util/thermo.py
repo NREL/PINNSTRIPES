@@ -2,8 +2,8 @@ import sys
 
 import numpy as np
 import tensorflow as tf
-from uocp_cs import uocp_a_fun_x, uocp_c_fun_x
 from keras.backend import set_floatx
+from uocp_cs import uocp_a_fun_x, uocp_c_fun_x
 
 set_floatx("float64")
 

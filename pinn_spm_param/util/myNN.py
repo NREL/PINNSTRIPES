@@ -19,12 +19,12 @@ from custom_activations import swish_activation
 from dataTools import checkDataShape, completeDataset
 from eager_lbfgs import Struct, lbfgs
 from keras import initializers, layers, losses, optimizers, regularizers
+from keras.backend import set_floatx
 from keras.callbacks import CSVLogger
 from keras.constraints import max_norm, unit_norm
 from keras.layers import *
 from keras.models import Model
 from prettyPlot.progressBar import print_progress_bar
-from keras.backend import set_floatx
 
 set_floatx("float64")
 

@@ -7,8 +7,8 @@ sys.path.append("../util")
 import argument
 import tensorflow as tf
 from keras import layers, regularizers
-from myNN import *
 from keras.backend import set_floatx
+from myNN import *
 
 set_floatx("float64")
 

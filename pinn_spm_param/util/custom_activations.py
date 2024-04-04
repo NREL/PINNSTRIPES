@@ -2,9 +2,9 @@ import argument
 import numpy as np
 import tensorflow as tf
 from conditionalDecorator import conditional_decorator
+from keras.backend import set_floatx
 from keras.layers import Activation
 from keras.utils import get_custom_objects
-from keras.backend import set_floatx
 
 set_floatx("float64")
 

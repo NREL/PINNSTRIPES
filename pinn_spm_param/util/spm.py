@@ -2,8 +2,8 @@ import sys
 
 import numpy as np
 import tensorflow as tf
-from thermo import *
 from keras.backend import set_floatx
+from thermo import *
 
 set_floatx("float64")
 
