@@ -4,6 +4,7 @@ import sys
 import time
 
 import argument
+import keras
 import numpy as np
 import tensorflow as tf
 from _losses import (
@@ -18,21 +19,14 @@ from conditionalDecorator import conditional_decorator
 from custom_activations import swish_activation
 from dataTools import checkDataShape, completeDataset
 from eager_lbfgs import Struct, lbfgs
+from keras import initializers, layers, losses, optimizers, regularizers
+from keras.callbacks import CSVLogger
+from keras.constraints import max_norm, unit_norm
+from keras.layers import *
+from keras.models import Model
 from prettyPlot.progressBar import print_progress_bar
-from tensorflow.keras import backend as K
-from tensorflow.keras import (
-    initializers,
-    layers,
-    losses,
-    optimizers,
-    regularizers,
-)
-from tensorflow.keras.callbacks import CSVLogger
-from tensorflow.keras.constraints import max_norm, unit_norm
-from tensorflow.keras.layers import *
-from tensorflow.keras.models import Model
 
-tf.keras.backend.set_floatx("float64")
+keras.backend.set_floatx("float64")
 
 # Read command line arguments
 args = argument.initArg()
@@ -61,7 +55,7 @@ def flexible_activation(x, activation):
     elif activation == "selu":
         out = Activation(activation="selu")(x)
     elif activation == "gelu":
-        out = tf.keras.activations.gelu(x, approximate=True)
+        out = keras.activations.gelu(x, approximate=True)
     return out
 
 
@@ -100,7 +94,7 @@ def grad_path(x, n_blocks, n_units, initializer, activation):
     H = singleLayer(x, n_units, initializer, activation)
     for i_block in range(n_blocks - 1):
         Z = singleLayer(H, n_units, initializer, activation)
-        H = (np.float64(1.0) - Z) * U + Z * V
+        H = (1.0 - Z) * U + Z * V
 
     return H
 
@@ -619,10 +613,7 @@ class myNN(Model):
 
         # Log model
         n_trainable_par = np.sum(
-            [
-                np.prod(v.get_shape().as_list())
-                for v in self.model.trainable_variables
-            ]
+            [np.prod(v._shape) for v in self.model.trainable_variables]
         )
         self.vprint("Num trainable param = ", n_trainable_par)
         self.n_trainable_par = n_trainable_par
@@ -2742,25 +2733,25 @@ class myNN(Model):
                     lr_m, lr_m_old = self.dynamic_control_lrm(
                         lr_m, epoch, lrSchedulerModel
                     )
-                    K.set_value(self.dsOptimizerModel.learning_rate, lr_m)
+                    self.k_set_value(self.dsOptimizerModel.learning_rate, lr_m)
                     if self.dynamicAttentionWeights:
                         lr_w, lr_w_old = self.dynamic_control_lrw(
                             lr_w, epoch, lrSchedulerWeights
                         )
                         if self.activeInt:
-                            K.set_value(
+                            self.k_set_value(
                                 self.dsOptimizerInt.learning_rate, lr_w
                             )
                         if self.activeBound:
-                            K.set_value(
+                            self.k_set_value(
                                 self.dsOptimizerBound.learning_rate, lr_w
                             )
                         if self.activeData:
-                            K.set_value(
+                            self.k_set_value(
                                 self.dsOptimizerData.learning_rate, lr_w
                             )
                         if self.activeReg:
-                            K.set_value(
+                            self.k_set_value(
                                 self.dsOptimizerReg.learning_rate, lr_w
                             )
                     if self.useLossThreshold:
@@ -2884,12 +2875,12 @@ class myNN(Model):
 
                 safe_save(
                     self.model,
-                    os.path.join(self.modelFolder, "lastSGD.h5"),
+                    os.path.join(self.modelFolder, "lastSGD.weights.h5"),
                     overwrite=True,
                 )
                 safe_save(
                     self.model,
-                    os.path.join(self.modelFolder, "last.h5"),
+                    os.path.join(self.modelFolder, "last.weights.h5"),
                     overwrite=True,
                 )
                 if (true_epoch_num * self.n_batch) % 1000 == 0:
@@ -2897,7 +2888,7 @@ class myNN(Model):
                         self.model,
                         os.path.join(
                             self.modelFolder,
-                            f"step_{true_epoch_num * self.n_batch}.h5",
+                            f"step_{true_epoch_num * self.n_batch}.weights.h5",
                         ),
                         overwrite=True,
                     )
@@ -3127,7 +3118,7 @@ class myNN(Model):
 
             safe_save(
                 self.model,
-                os.path.join(self.modelFolder, "last.h5"),
+                os.path.join(self.modelFolder, "last.weights.h5"),
                 overwrite=True,
             )
 
@@ -3423,6 +3414,10 @@ class myNN(Model):
         )
         return change > 1e-6
 
+    def k_set_value(self, x, value):
+        value = np.asarray(value, dtype=x.dtype)
+        x.assign(value)
+
     def logTraining(self, epoch, mse, bestLoss, mse_unweighted=None):
         f = open(os.path.join(self.logLossFolder, "log.csv"), "a+")
         if self.dynamicAttentionWeights:
@@ -3455,7 +3450,7 @@ class myNN(Model):
         # Save model weights
         safe_save(
             self.model,
-            os.path.join(self.modelFolder, "lastSGD.h5"),
+            os.path.join(self.modelFolder, "lastSGD.weights.h5"),
             overwrite=True,
         )
 
@@ -3646,7 +3641,7 @@ class myNN(Model):
             bestLoss = epochLoss
             safe_save(
                 self.model,
-                os.path.join(self.modelFolder, "best.h5"),
+                os.path.join(self.modelFolder, "best.weights.h5"),
                 overwrite=True,
             )
         return bestLoss

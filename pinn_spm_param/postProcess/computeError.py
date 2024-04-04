@@ -8,12 +8,13 @@ sys.path.append("../util")
 from pathlib import Path
 
 import argument
+import keras
 import tensorflow as tf
+from keras import layers, regularizers
 from myNN import *
 from tensorflow import keras
-from tensorflow.keras import layers, regularizers
 
-tf.keras.backend.set_floatx("float64")
+keras.backend.set_floatx("float64")
 from forwardPass import (
     from_param_list_to_str,
     make_data_dict,
@@ -110,7 +111,7 @@ def init_error(
         data_dict = make_data_dict(dataFolder, params_list)
     if not var_dict or not params_dict:
         var_dict, params_dict = make_var_params_from_data(nn, data_dict)
-    nn = safe_load(nn, os.path.join(modelFolder, "best.h5"))
+    nn = safe_load(nn, os.path.join(modelFolder, "best.weights.h5"))
 
     return nn, data_dict, var_dict, params_dict
 

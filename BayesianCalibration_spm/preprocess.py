@@ -41,12 +41,12 @@ noise = args.noise
 sys.path.append(args.utilFolder)
 
 import argument
+import keras
 import tensorflow as tf
+from keras import layers, regularizers
 from myNN import *
-from tensorflow import keras
-from tensorflow.keras import layers, regularizers
 
-tf.keras.backend.set_floatx("float64")
+keras.backend.set_floatx("float64")
 
 # Read command line arguments
 args_spm = argument.initArg()
@@ -110,7 +110,7 @@ else:
             for par_name in params["deg_params_names"]
         ]
 
-nn = safe_load(nn, os.path.join(modelFolder, "best.h5"))
+nn = safe_load(nn, os.path.join(modelFolder, "best.weights.h5"))
 model = nn.model
 # rescale
 resc_r = params["rescale_R"]

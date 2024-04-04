@@ -1,9 +1,10 @@
 import argument
+import keras
 import numpy as np
 import tensorflow as tf
 from conditionalDecorator import conditional_decorator
 
-tf.keras.backend.set_floatx("float64")
+keras.backend.set_floatx("float64")
 
 # Read command line arguments
 args = argument.initArg()

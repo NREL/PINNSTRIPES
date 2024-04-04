@@ -391,12 +391,14 @@ def lbfgs(
             if bestLoss is None or currentLoss < bestLoss:
                 bestLoss = currentLoss
                 safe_save(
-                    model, os.path.join(modelFolder, "best.h5"), overwrite=True
+                    model,
+                    os.path.join(modelFolder, "best.weights.h5"),
+                    overwrite=True,
                 )
             if nIter % 10 == 0:
                 safe_save(
                     model,
-                    os.path.join(modelFolder, "lastLBFGS.h5"),
+                    os.path.join(modelFolder, "lastLBFGS.weights.h5"),
                     overwrite=True,
                 )
             if (
@@ -405,7 +407,7 @@ def lbfgs(
                 totalStep = nIter + nEpochDoneLBFGS + nEpochDoneSGD * nBatchSGD
                 safe_save(
                     model,
-                    os.path.join(modelFolder, f"step_{totalStep}.h5"),
+                    os.path.join(modelFolder, f"step_{totalStep}.weights.h5"),
                     overwrite=True,
                 )
                 print("\nSaved weights")
@@ -435,7 +437,7 @@ def lbfgs(
             final_loss = f.numpy()
             safe_save(
                 model,
-                os.path.join(modelFolder, f"lastLBFGS.h5"),
+                os.path.join(modelFolder, f"lastLBFGS.weights.h5"),
                 overwrite=True,
             )
 

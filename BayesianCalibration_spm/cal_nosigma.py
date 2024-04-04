@@ -100,7 +100,7 @@ print("INFO: Loading from config file")
 with open(os.path.join(modelFolder, "config.json")) as json_file:
     configDict = json.load(json_file)
 nn = initialize_nn_from_params_config(params, configDict)
-nn = safe_load(nn, os.path.join(modelFolder, "best.h5"))
+nn = safe_load(nn, os.path.join(modelFolder, "best.weights.h5"))
 params_min = configDict["params_min"]
 params_max = configDict["params_max"]
 

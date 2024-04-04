@@ -1,4 +1,4 @@
-tensorflow<2.15
+tensorflow>=2.16
 prettyPlot>=0.0.31
 pandas
 corner

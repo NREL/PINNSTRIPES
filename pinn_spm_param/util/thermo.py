@@ -1,10 +1,11 @@
 import sys
 
+import keras
 import numpy as np
 import tensorflow as tf
 from uocp_cs import uocp_a_fun_x, uocp_c_fun_x
 
-tf.keras.backend.set_floatx("float64")
+keras.backend.set_floatx("float64")
 
 
 def uocp_a_simp(cs_a, csanmax):

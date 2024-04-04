@@ -1,10 +1,12 @@
+import os
 import sys
 
+import keras
 import numpy as np
 import tensorflow as tf
 from thermo import *
 
-tf.keras.backend.set_floatx("float64")
+keras.backend.set_floatx("float64")
 
 print("INFO: USING SIMPLE SPM MODEL")
 
