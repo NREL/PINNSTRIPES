@@ -44,8 +44,6 @@ import argument
 import tensorflow as tf
 from myNN import *
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
-
 import keras
 from keras import layers, regularizers
 
