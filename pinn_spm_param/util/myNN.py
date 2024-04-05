@@ -3199,6 +3199,17 @@ class myNN(Model):
         with open(
             os.path.join(self.modelFolder, "config.json"), "w+"
         ) as outfile:
+            # float 32 is not supported by Json
+            for key in self.config:
+                ent_type = str(type(self.config[key]))
+                if "numpy.float" in ent_type and "32" in ent_type:
+                    self.config[key] = float(self.config[key])
+                elif key == "params_min" or key == "params_max":
+                    for ientry, entry in enumerate(self.config[key]):
+                        ent_type = str(type(self.config[key][ientry]))
+                        if "numpy.float" in ent_type and "32" in ent_type:
+                            self.config[key][ientry] = float(entry)
+
             json.dump(self.config, outfile, indent=4, sort_keys=True)
 
         # Make log headers
