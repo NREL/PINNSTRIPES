@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10']
+        python-version: ['3.11']
     defaults:
       run:
         working-directory: ${{github.workspace}}
@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10']
+        python-version: ['3.11']
     defaults:
       run:
         working-directory: ${{github.workspace}}
@@ -65,7 +65,7 @@ jobs:
           python main.py -nosimp -opt -lean -p 0.5 1
           cd ../preProcess
           python makeDataset_spm.py -nosimp -df ../integration_spm -frt 1 -p 0.5 1
-      - name: Test SPM
+      - name: Test SPM training
         run: |
           cd pinn_spm_param/tests
           pytest -v test_spm.py
@@ -82,3 +82,14 @@ jobs:
         run: |
           cd BayesianCalibration_spm
           bash exec_test.sh
+      - name: Test SPM train and post process float 32
+        run: |
+          cd pinn_spm_param
+          bash convert_to_float32.sh
+          cd integration_spm
+          python main.py -nosimp -opt -lean -p 0.5 1
+          cd ../preProcess
+          python makeDataset_spm.py -nosimp -df ../integration_spm -frt 1 -p 0.5 1
+          cd ../tests
+          pytest -v test_spm.py::test_sgd_lbfgs
+          pytest -v test_spm_postProc.py

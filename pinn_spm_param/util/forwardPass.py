@@ -47,7 +47,7 @@ def var_from_x(x_arr, dummyVal=np.float64(0.0)):
     if x_arr.shape[1] == 2:
         var_full[1] = var_simp[1]
     else:
-        var_full[1] = dummyVal * np.ones(x_arr.shape[0])
+        var_full[1] = dummyVal * np.ones(x_arr.shape[0], dtype=np.float64)
     return var_simp, var_full
 
 
@@ -62,7 +62,7 @@ def rescale_var_list(nn, var_list, dummyVal=np.float64(0.0)):
     else:
         var_list_resc_full[nn.ind_r] = (
             dummyVal
-            * np.ones(var_list_resc_full[nn.ind_t].shape)
+            * np.ones(var_list_resc_full[nn.ind_t].shape, dtype=np.float64)
             / nn.params["rescale_R"]
         )
     return var_list_resc, var_list_resc_full
@@ -276,11 +276,12 @@ def pinn_pred_struct(nn, params_list):
         (n_t * n_r * n_par * n_par, 1),
     ).astype("float64")
     params_r_unr = [
-        np.ones((n_t * n_r, 1)) * entry
+        np.ones((n_t * n_r, 1), dtype=np.float64) * entry
         for ientry, entry in enumerate(params_list)
     ]
     params_r = [
-        np.ones((n_t * n_r, 1)) * nn.rescale_param(entry, ientry)
+        np.ones((n_t * n_r, 1), dtype=np.float64)
+        * nn.rescale_param(entry, ientry)
         for ientry, entry in enumerate(params_list)
     ]
 
