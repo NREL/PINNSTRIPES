@@ -65,7 +65,7 @@ jobs:
           python main.py -nosimp -opt -lean -p 0.5 1
           cd ../preProcess
           python makeDataset_spm.py -nosimp -df ../integration_spm -frt 1 -p 0.5 1
-      - name: Test SPM
+      - name: Test SPM training
         run: |
           cd pinn_spm_param/tests
           pytest -v test_spm.py
