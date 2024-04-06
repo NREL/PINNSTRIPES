@@ -53,17 +53,17 @@ def make_sim_config(t_dom, r_dom):
 
 
 def init_arrays(n_t, n_r):
-    phie = np.zeros(n_t)
-    phis_c = np.zeros(n_t)
-    cs_a = np.zeros((n_t, n_r))
-    cs_c = np.zeros((n_t, n_r))
-    Ds_a = np.zeros(n_r)
-    Ds_c = np.zeros(n_r)
-    rhs_a = np.zeros(n_r)
-    rhs_c = np.zeros(n_r)
-    A = np.zeros((n_r, n_r))
-    B_a = np.zeros(n_r)
-    B_c = np.zeros(n_r)
+    phie = np.zeros(n_t, dtype=np.float64)
+    phis_c = np.zeros(n_t, dtype=np.float64)
+    cs_a = np.zeros((n_t, n_r), dtype=np.float64)
+    cs_c = np.zeros((n_t, n_r), dtype=np.float64)
+    Ds_a = np.zeros(n_r, dtype=np.float64)
+    Ds_c = np.zeros(n_r, dtype=np.float64)
+    rhs_a = np.zeros(n_r, dtype=np.float64)
+    rhs_c = np.zeros(n_r, dtype=np.float64)
+    A = np.zeros((n_r, n_r), dtype=np.float64)
+    B_a = np.zeros(n_r, dtype=np.float64)
+    B_c = np.zeros(n_r, dtype=np.float64)
 
     return {
         "ce": 0,
@@ -98,7 +98,7 @@ def tridiag(ds, dt, dr):
 
 
 def rhs(dt, r, ddr_cs, ds, ddDs_cs, cs, bound_grad):
-    rhs_col = np.zeros(len(r))
+    rhs_col = np.zeros(len(r), dtype=np.float64)
     rhs_col = (
         dt
         * (np.float64(2.0) / np.clip(r, a_min=1e-12, a_max=None))
@@ -259,7 +259,7 @@ def integration(
                     grad_ds_a_cs_a(params["T"], params["R"])
                 )
             else:
-                gradDs_a_cs_a = np.zeros(len(sol["Ds_a"]))
+                gradDs_a_cs_a = np.zeros(len(sol["Ds_a"]), dtype=np.float64)
 
             ddr_csa = np.gradient(
                 sol["cs_a"][i_t - 1, :], r_a, axis=0, edge_order=2
@@ -289,7 +289,8 @@ def integration(
                 params["T"],
                 params["R"],
                 params["cscamax"],
-                deg_ds_c * np.ones(sol["cs_c"][i_t - 1, :].shape),
+                deg_ds_c
+                * np.ones(sol["cs_c"][i_t - 1, :].shape, dtype=np.float64),
             )
             if EXACT_GRAD_DS_CS:
                 gradDs_c_cs_c = grad_ds_c_cs_c(
@@ -302,26 +303,30 @@ def integration(
                 Ds_c_tmp1 = params["D_s_c"](
                     np.clip(
                         sol["cs_c"][i_t - 1, :]
-                        + np.ones(sol["cs_c"].shape[1]) * GRAD_STEP,
+                        + np.ones(sol["cs_c"].shape[1], dtype=np.float64)
+                        * GRAD_STEP,
                         a_min=0,
                         a_max=params["cscamax"],
                     ),
                     params["T"],
                     params["R"],
                     params["cscamax"],
-                    deg_ds_c * np.ones(sol["cs_c"][i_t - 1, :].shape),
+                    deg_ds_c
+                    * np.ones(sol["cs_c"][i_t - 1, :].shape, dtype=np.float64),
                 )
                 Ds_c_tmp2 = params["D_s_c"](
                     np.clip(
                         sol["cs_c"][i_t - 1, :]
-                        - np.ones(sol["cs_c"].shape[1]) * GRAD_STEP,
+                        - np.ones(sol["cs_c"].shape[1], dtype=np.float64)
+                        * GRAD_STEP,
                         a_min=0,
                         a_max=params["cscamax"],
                     ),
                     params["T"],
                     params["R"],
                     params["cscamax"],
-                    deg_ds_c * np.ones(sol["cs_c"][i_t - 1, :].shape),
+                    deg_ds_c
+                    * np.ones(sol["cs_c"][i_t - 1, :].shape, dtype=np.float64),
                 )
                 gradDs_c_cs_c = (
                     (Ds_c_tmp1 - Ds_c_tmp2) / (2 * GRAD_STEP)
@@ -357,7 +362,7 @@ def integration(
             )
             ddr_csa[0] = 0
             ddr_csa[-1] = -sol["j_a"] / sol["Ds_a"][-1]
-            ddr2_csa = np.zeros(n_r)
+            ddr2_csa = np.zeros(n_r, dtype=np.float64)
             ddr2_csa[1 : n_r - 1] = (
                 sol["cs_a"][i_t - 1, : n_r - 2]
                 - 2 * sol["cs_a"][i_t - 1, 1 : n_r - 1]
@@ -392,14 +397,15 @@ def integration(
                 params["T"],
                 params["R"],
                 params["cscamax"],
-                deg_ds_c * np.ones(sol["cs_c"][i_t - 1, :].shape),
+                deg_ds_c
+                * np.ones(sol["cs_c"][i_t - 1, :].shape, dtype=np.float64),
             )
             ddr_csc = np.gradient(
                 sol["cs_c"][i_t - 1, :], r_c, axis=0, edge_order=2
             )
             ddr_csc[0] = 0
             ddr_csc[-1] = -sol["j_c"] / sol["Ds_c"][-1]
-            ddr2_csc = np.zeros(n_r)
+            ddr2_csc = np.zeros(n_r, dtype=np.float64)
             ddr2_csc[1 : n_r - 1] = (
                 sol["cs_c"][i_t - 1, : n_r - 2]
                 - 2 * sol["cs_c"][i_t - 1, 1 : n_r - 1]
