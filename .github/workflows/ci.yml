@@ -82,7 +82,7 @@ jobs:
         run: |
           cd BayesianCalibration_spm
           bash exec_test.sh
-      - name: Test SPM float 32
+      - name: Test SPM train and post process float 32
         run: |
           cd pinn_spm_param
           bash convert_to_float32.sh
