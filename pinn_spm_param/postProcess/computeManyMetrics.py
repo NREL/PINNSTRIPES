@@ -84,6 +84,7 @@ endError_cs_a = []
 endError_cs_c = []
 maxSteps = []
 maxEpochs = []
+endErrorTermVolt = []
 for lossFolder in lossFolders:
     fileGlobalLoss = os.path.join(rootFolder, lossFolder, "log.csv")
     globMSELoss = readLoss(fileGlobalLoss)
@@ -118,6 +119,19 @@ for modelFolder in modelFolders:
     endError_phis_c.append(err_dict["phis_c"])
     endError_cs_a.append(err_dict["cs_a"])
     endError_cs_c.append(err_dict["cs_c"])
+    endErrorTermVolt.append(err_dict["term_volt"])
+
+ptile1 = 2.5
+ptile2 = 97.5
+errptile = [
+    np.percentile(np.array(endError), ptile1),
+    np.percentile(np.array(endError), ptile2),
+]
+errTVptile = [
+    np.percentile(np.array(endErrorTermVolt), ptile1),
+    np.percentile(np.array(endErrorTermVolt), ptile2),
+]
+
 
 print(
     f"Loss {np.mean(np.array(endMSELosses)):.2f} +\- {np.std(np.array(endMSELosses)):.2f}"
@@ -126,7 +140,13 @@ print(
     f"Error {np.mean(np.array(endError)):.2f} +\- {np.std(np.array(endError)):.2f}"
 )
 print(
-    f"Error med {np.median(np.array(endError)):.2f} ptiles {np.percentile(np.array(endError), 2.5):.2f}   +\- {np.percentile(np.array(endError), 97.5):.2f}"
+    f"Error med {np.median(np.array(endError)):.2g} ptiles {errptile[0]:.2g}   +\- {errptile[1]:.2g}"
+)
+print(
+    f"Term volt {np.mean(np.array(endErrorTermVolt)):.2g} +\- {np.std(np.array(endErrorTermVolt)):.2g}"
+)
+print(
+    f"Term volt med {np.median(np.array(endErrorTermVolt)):.2g} ptiles {errTVptile[0]:.2g}   +\- {errTVptile[1]:.2g}"
 )
 print(
     f"\tphie {np.mean(np.array(endError_phie)):.2f} +\- {np.std(np.array(endError_phie)):.2f}"
