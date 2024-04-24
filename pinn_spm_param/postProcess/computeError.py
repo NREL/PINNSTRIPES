@@ -54,6 +54,7 @@ def computeError(dataDict, predDict, debug=False):
         abs(yTest_phis_c - phis_c_rescaled)
         / np.clip(abs(yTest_phis_c), a_min=1e-16, a_max=None)
     )
+    term_volt = np.mean(abs(yTest_phis_c - phis_c_rescaled))
     globalError += tmp
     globalError_phis_c = tmp
     if debug:
@@ -86,6 +87,7 @@ def computeError(dataDict, predDict, debug=False):
         "phis_c": globalError_phis_c,
         "cs_a": globalError_cs_a,
         "cs_c": globalError_cs_c,
+        "term_volt": term_volt,
     }
 
 
