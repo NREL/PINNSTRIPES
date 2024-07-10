@@ -5,4 +5,4 @@ corner
 tf2jax
 numpyro
 black>=24.3.0
-scikit-learn
+scikit-learn>=1.5.0

@@ -1,0 +1,3 @@
+[codespell]
+skip = None, .git,build,__pycache__,assets
+ignore-words = .github/linters/.codespell-ignore-words
