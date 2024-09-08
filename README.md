@@ -183,23 +183,24 @@ Recommended citations
 
 
 ```
-
-@article{hassanaly2023pinn1,
-      title={{PINN surrogate of Li-ion battery models for parameter inference. Part I: Implementation and multi-fidelity hierarchies for the single-particle model}}, 
-      author={Malik Hassanaly and Peter J. Weddle and Ryan N. King and Subhayan De and Alireza Doostan and Corey R. Randall and Eric J. Dufek and Andrew M. Colclasure and Kandler Smith},
-      year={2023},
-      eprint={2312.17329},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@article{hassanaly2024pinn1,
+  title={PINN surrogate of Li-ion battery models for parameter inference, Part I: Implementation and multi-fidelity hierarchies for the single-particle model},
+  author={Hassanaly, Malik and Weddle, Peter J and King, Ryan N and De, Subhayan and Doostan, Alireza and Randall, Corey R and Dufek, Eric J and Colclasure, Andrew M and Smith, Kandler},
+  journal={Journal of Energy Storage},
+  volume={98},
+  pages={113103},
+  year={2024},
+  publisher={Elsevier}
 }
 
-@article{hassanaly2023pinn2,
-      title={{PINN surrogate of Li-ion battery models for parameter inference. Part II: Regularization and application of the pseudo-2D model}}, 
-      author={Malik Hassanaly and Peter J. Weddle and Ryan N. King and Subhayan De and Alireza Doostan and Corey R. Randall and Eric J. Dufek and Andrew M. Colclasure and Kandler Smith},
-      year={2023},
-      eprint={2312.17336},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@article{hassanaly2024pinn2,
+  title={PINN surrogate of Li-ion battery models for parameter inference, Part II: Regularization and application of the pseudo-2D model},
+  author={Hassanaly, Malik and Weddle, Peter J and King, Ryan N and De, Subhayan and Doostan, Alireza and Randall, Corey R and Dufek, Eric J and Colclasure, Andrew M and Smith, Kandler},
+  journal={Journal of Energy Storage},
+  volume={98},
+  pages={113104},
+  year={2024},
+  publisher={Elsevier}
 }
 
 @misc{osti_2204976,
